@@ -1,0 +1,183 @@
+#include "Chassis_Task.h"
+
+
+uint8_t Motor_PID_Chassis_Init(MOTOR_Typdef *MOTOR)
+{
+    float PID_S_1[3] = {   3.0f,   0.0f,   0.0f   };
+    float PID_S_2[3] = {   3.0f,   0.0f,   0.0f   };
+    float PID_S_3[3] = {   3.0f,   0.0f,   0.0f   };
+    float PID_S_4[3] = {   3.0f,   0.0f,   0.0f   };
+    PID_Init(&MOTOR->DJI_3508_Chassis_1.PID_S, 16384.0f, 1000.0f,
+            PID_S_1, 0, 0,
+            0, 0, 0,
+            Integral_Limit|ErrorHandle//积分限幅,输出滤波,堵转监测
+            //梯形积分,变速积分
+            );//微分先行,微分滤波器
+    PID_Init(&MOTOR->DJI_3508_Chassis_2.PID_S, 16384.0f, 1000.0f,
+            PID_S_2, 0, 0,
+            0, 0, 0,
+            Integral_Limit|ErrorHandle//积分限幅,输出滤波,堵转监测
+            //梯形积分,变速积分
+            );//微分先行,微分滤波器
+    PID_Init(&MOTOR->DJI_3508_Chassis_3.PID_S, 16384.0f, 1000.0f,
+             PID_S_3, 0, 0,
+             0, 0, 0,
+             Integral_Limit|ErrorHandle//积分限幅,输出滤波,堵转监测
+             //梯形积分,变速积分
+             );//微分先行,微分滤波器
+    PID_Init(&MOTOR->DJI_3508_Chassis_4.PID_S, 16384.0f, 1000.0f,
+             PID_S_4, 0, 0,
+             0, 0, 0,
+             Integral_Limit|ErrorHandle//积分限幅,输出滤波,堵转监测
+             //梯形积分,变速积分
+             );//微分先行,微分滤波器
+    return RUI_DF_READY;
+
+}
+uint8_t Chassis_AIM_INIT(RUI_ROOT_STATUS_Typedef *Root, MOTOR_Typdef *MOTOR)
+{
+    //检查离线
+    if (Root->MOTOR_Chassis_1     == RUI_DF_OFFLINE ||
+        Root->MOTOR_Chassis_2     == RUI_DF_OFFLINE ||
+        Root->MOTOR_Chassis_3     == RUI_DF_OFFLINE ||
+        Root->MOTOR_Chassis_4     == RUI_DF_OFFLINE)
+        return RUI_DF_ERROR;
+
+    //电机清空
+    HEAD_MOTOR_CLEAR(&MOTOR->DJI_3508_Chassis_1, 1);
+    HEAD_MOTOR_CLEAR(&MOTOR->DJI_3508_Chassis_2, 1);
+    HEAD_MOTOR_CLEAR(&MOTOR->DJI_3508_Chassis_3, 1);
+    HEAD_MOTOR_CLEAR(&MOTOR->DJI_3508_Chassis_4, 1);
+
+    return RUI_DF_READY;
+}
+
+uint8_t chassis_task(CONTAL_Typedef *CONTAL,
+                   RUI_ROOT_STATUS_Typedef *Root,
+                   User_Data_T *User_data,
+                   model_t *model,
+                   CAP_RXDATA *CAP_GET,
+                   MOTOR_Typdef *MOTOR) {
+    static uint8_t PID_INIT = RUI_DF_ERROR;
+    static uint8_t AIM_INIT = RUI_DF_ERROR;
+
+    //电机PID赋值
+    if (PID_INIT != RUI_DF_READY)
+    {
+        PID_INIT = Motor_PID_Chassis_Init(MOTOR);
+        return RUI_DF_ERROR;
+    }
+    MOTOR->DJI_3508_Chassis_3.DATA.Aim = CONTAL->BOTTOM.wheel1*4.0f;
+    MOTOR->DJI_3508_Chassis_4.DATA.Aim = CONTAL->BOTTOM.wheel2*4.0f;
+    MOTOR->DJI_3508_Chassis_1.DATA.Aim = CONTAL->BOTTOM.wheel3*4.0f;
+    MOTOR->DJI_3508_Chassis_2.DATA.Aim = CONTAL->BOTTOM.wheel4*4.0f;
+    //		}
+    //    /*遥控离线保护
+    if(Root->RM_DBUS==0)
+    {
+        CONTAL->BOTTOM.wheel1 = 0;
+        CONTAL->BOTTOM.wheel2 =0;
+        CONTAL->BOTTOM.wheel3 = 0;
+        CONTAL->BOTTOM.wheel4 =0;
+    }
+    PID_Calculate(&MOTOR->DJI_3508_Chassis_1.PID_S,
+                     (float)MOTOR->DJI_3508_Chassis_1.DATA.Speed_now,
+                     MOTOR->DJI_3508_Chassis_1.DATA.Aim);
+    PID_Calculate(&MOTOR->DJI_3508_Chassis_2.PID_S,
+                 (float)MOTOR->DJI_3508_Chassis_2.DATA.Speed_now,
+                 MOTOR->DJI_3508_Chassis_2.DATA.Aim);
+    PID_Calculate(&MOTOR->DJI_3508_Chassis_3.PID_S,
+                 (float)MOTOR->DJI_3508_Chassis_3.DATA.Speed_now,
+                 MOTOR->DJI_3508_Chassis_3.DATA.Aim);
+    PID_Calculate(&MOTOR->DJI_3508_Chassis_3.PID_S,
+                 (float)MOTOR->DJI_3508_Chassis_3.DATA.Speed_now,
+                 MOTOR->DJI_3508_Chassis_3.DATA.Aim);
+   //功率控制
+    chassis_power_control(CONTAL,
+                             User_data,
+                             model,
+                             CAP_GET,
+                             MOTOR);
+
+    /*总输出计算*/
+    float Out_put[4];
+    Out_put[0] = /*MOTOR->DJI_3508_Chassis_1.PID_F.Output*/0 +
+               MOTOR->DJI_3508_Chassis_1.PID_S.Output;
+
+    Out_put[1] = /*MOTOR->DJI_3508_Chassis_2.PID_F.Output*/0 +
+               MOTOR->DJI_3508_Chassis_2.PID_S.Output;
+
+    Out_put[2] = /*MOTOR->DJI_3508_Chassis_3.PID_F.Output*/0 +
+               MOTOR->DJI_3508_Chassis_3.PID_S.Output;
+
+    Out_put[3] = /*MOTOR->DJI_3508_Chassis_4.PID_F.Output*/0 +
+               MOTOR->DJI_3508_Chassis_4.PID_S.Output;
+
+    /*CAN发送*/
+    DJI_Current_Ctrl(&hcan1,
+                     0x200,
+                     (int16_t)Out_put[0],
+                     (int16_t)Out_put[1],
+                     (int16_t)Out_put[2],
+                     (int16_t)Out_put[3]
+                                            );
+    return RUI_DF_READY;
+}
+
+void Chassis_normol(CONTAL_Typedef *CONTAL,DBUS_Typedef *DBUS)
+{
+   CONTAL->BOTTOM.VW =DBUS->Remote.CH3 *(w_max /660);//底盘转了，此时云台得有个反角速度抵消
+    robot_run_USE_Encode();
+
+}
+
+void Chassis_GYROSCOPE(CONTAL_Typedef *CONTAL,DBUS_Typedef *DBUS)//小陀螺模式
+{
+    //	chassis.vx =remote_t .control .ch1_int16*(vx_max/660);
+    //	chassis .vy =remote_t .control .ch0_int16 *(vy_max /660);
+    CONTAL->BOTTOM.VW =3;
+    robot_run_USE_Gyro();
+}
+
+void  Chassis_Follow_Gimbal_gyro(CONTAL_Typedef *CONTAL,DBUS_Typedef *DBUS) {
+    follow_pid.Kp = 0.8;   // 需实测调整
+    follow_pid.Ki = 0.0;
+    follow_pid.Kd = 0.0;
+    float gimbal_angle = fmod(gimbal_gyro.yaw,360.0f);
+    if (gimbal_angle > 180) gimbal_angle -= 360;
+    else if (gimbal_angle < -180) gimbal_angle += 360;
+    float target_rel_angle = DBUS->Remote.CH2 * (180.0f / 660);
+    float angle_err = target_rel_angle - gimbal_angle;
+    //	float angle_err = -gimbal_angle;
+    // 将角度误差映射到 [-180,180] 避免反绕
+    if (angle_err > 180) angle_err -= 360;
+    if (angle_err < -180) angle_err += 360;
+
+    // PID 计算期望底盘转速（单位 rad/s）
+    CONTAL->BOTTOM.VW = follow_pid.Kp * angle_err + follow_pid.Kd * (angle_err - last_angle_err);
+    last_angle_err = angle_err;
+    if (CONTAL->BOTTOM.VW> w_max) CONTAL->BOTTOM.VW= w_max;
+    if (CONTAL->BOTTOM.VW< -w_max)  CONTAL->BOTTOM.VW= -w_max;
+
+
+    // double  angle_hd=(gimbal_angle +chassis.w *0.005)* PI / 180;//有正有负
+    float angle_deg = gimbal_angle + CONTAL->BOTTOM.VW* Time * 180 / PI; // 弧度转度
+    float angle_hd = angle_deg * PI / 180;
+   CONTAL->BOTTOM.VX =DBUS->Remote.CH1*(vx_max/660)*cos(angle_hd)-DBUS->Remote.CH0 *(vy_max /660)*sin(angle_hd);
+   CONTAL->BOTTOM.VY= DBUS->Remote.CH1*(vx_max/660)*sin(angle_hd)+DBUS->Remote.CH0 *(vy_max /660)*cos(angle_hd);//将云台的速度进行一定的转化，并将转化值赋值给底盘
+
+}
+
+void robot_run_USE_Gyro() {
+    Motor_Round_Resolve(&gimbal);
+    // float angle = fmod(gimbal_gyro.yaw  * 360.0f / 8192.0f, 360.0f);
+
+    if (gimbal_gyro.yaw > 180) gimbal_gyro.yaw -= 360;
+    else if (gimbal_gyro.yaw  < -180) gimbal_gyro.yaw += 360;
+    //double  angle_hd=(angle+chassis.w *0.005)* PI / 180;//有正有负
+    float angle_deg = gimbal_gyro.yaw + chassis.w * Time * 180 / PI; // 弧度转度
+    float angle_hd = angle_deg * PI / 180;
+    chassis.vx = remote_t .control .ch1_int16*(vx_max/660)*cos(angle_hd)-remote_t .control .ch0_int16 *(vy_max /660)*sin(angle_hd);
+    chassis.vy = remote_t .control .ch1_int16*(vx_max/660)*sin(angle_hd)+remote_t .control .ch0_int16 *(vy_max /660)*cos(angle_hd);//将云台的速度进行一定的转化，并将转化值赋值给底盘
+
+}//改了以后也不太知道对不对
