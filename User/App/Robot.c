@@ -6,6 +6,13 @@ float yaw_TD;
 float pitch_TD;
 static float counttt=0.0f;
 float VISION_connect;
+
+typedef enum {
+    CHASSIS_MODE_FOLLOW   = 1,  // 底盘跟随云台（陀螺仪）
+    CHASSIS_MODE_NORMAL   = 2,  // 普通模式（拨轮控制旋转）
+    CHASSIS_MODE_GYRO     = 3,  // 小陀螺模式（固定自旋）
+} Chassis_Mode_e;//这个写头文件该咋引用
+
 void RobotTask(uint8_t mode,
                DBUS_Typedef *DBUS,
                CONTAL_Typedef *CONTAL,
@@ -24,9 +31,48 @@ void RobotTask(uint8_t mode,
         case 1://底盘
         {
 
-            CONTAL->BOTTOM.VY = (float) -( DBUS->Remote.CH0 ) ;
-            CONTAL->BOTTOM.VX = (float) ( DBUS->Remote.CH1  ) ;
-            CONTAL->BOTTOM.VW = (float) ( DBUS->Remote.Dial *1.5);
+            if (Root->RM_DBUS == RUI_DF_OFFLINE)
+            {
+                CONTAL->BOTTOM.VX    = 0.0f;
+                CONTAL->BOTTOM.VY    = 0.0f;
+                CONTAL->BOTTOM.VW    = 0.0f;
+                CONTAL->BOTTOM.wheel1 = 0.0f;
+                CONTAL->BOTTOM.wheel2 = 0.0f;
+                CONTAL->BOTTOM.wheel3 = 0.0f;
+                CONTAL->BOTTOM.wheel4 = 0.0f;
+                break;
+            }
+
+            /* -------- 底盘模式选择（S2 拨轮）-------- */
+            switch ((Chassis_Mode_e)DBUS->Remote.S2)
+            {
+                case CHASSIS_MODE_FOLLOW:
+                    /* 底盘跟随云台：PID 驱动底盘对准云台方向，平移仍以云台视角 */
+                    Chassis_Follow_Gimbal(CONTAL, DBUS, IMU_Data);
+                    break;
+
+                case CHASSIS_MODE_NORMAL:
+                    /* 普通模式：拨轮控制旋转，平移以云台视角（编码器）*/
+                    Chassis_Normal(CONTAL, DBUS, MOTOR);
+                    break;
+
+                case CHASSIS_MODE_GYRO:
+                    /* 小陀螺：底盘固定转速自旋，操作手仍可平移 */
+                    Chassis_Gyroscope(CONTAL, DBUS, IMU_Data);
+                    break;
+
+                default:
+                    /* 未知模式：停止 */
+                    CONTAL->BOTTOM.VX = 0.0f;
+                    CONTAL->BOTTOM.VY = 0.0f;
+                    CONTAL->BOTTOM.VW = 0.0f;
+                    break;
+            }
+
+            /* -------- 调试监视 -------- */
+            monitor_X = CONTAL->BOTTOM.VX;
+            monitor_Y = CONTAL->BOTTOM.VY;
+            monitor_W = CONTAL->BOTTOM.VW;
 
         } break;
 

@@ -152,11 +152,17 @@
 #define PSI_MODE		  	0x300
 
 //chassis_task
-#define W_MAX  3
+#define VW_MAX  3
 #define VX_MAX 1
 #define VY_MAX 1
 #define CHASSIS_LOOP_TIME   0.001f    // 底盘任务周期
 #define REMOTE_SCALE        660.0f    // 遥控摇杆最大值
+/* 小陀螺固定转速 rad/s */
+#define GYROSCOPE_W           3.0f
+/* 底盘跟随 PID 参数（需实测调整） */
+#define FOLLOW_KP             0.8f
+#define FOLLOW_KI             0.0f
+#define FOLLOW_KD             0.1f
 
 
 #endif
