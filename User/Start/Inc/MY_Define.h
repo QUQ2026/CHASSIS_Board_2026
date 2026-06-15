@@ -151,9 +151,12 @@
 #define SPD_MODE			0x200
 #define PSI_MODE		  	0x300
 
+//chassis_task
+#define W_MAX  3
+#define VX_MAX 1
+#define VY_MAX 1
+#define CHASSIS_LOOP_TIME   0.001f    // 底盘任务周期
+#define REMOTE_SCALE        660.0f    // 遥控摇杆最大值
 
-#define w_max 3
-#define vx_max 1
-#define vy_max 1
 
 #endif

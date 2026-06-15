@@ -1,4 +1,5 @@
 #include "Chassis_Task.h"
+#define OMNI_RATIO            ((30.0f / 3.14159265f) / 0.075f * 19.0f)
 static float NormalizeAngle(float angle)//角度归一化
 {
     angle = fmodf(angle, 360.0f);
@@ -169,60 +170,3 @@ uint8_t chassis_task(CONTAL_Typedef *CONTAL,
     return RUI_DF_READY;
 }
 
-void Chassis_normol(CONTAL_Typedef *CONTAL,DBUS_Typedef *DBUS)
-{
-   CONTAL->BOTTOM.VW =DBUS->Remote.CH3 *(w_max /660);//底盘转了，此时云台得有个反角速度抵消
-    robot_run_USE_Encode();
-
-}
-
-void Chassis_GYROSCOPE(CONTAL_Typedef *CONTAL,DBUS_Typedef *DBUS)//小陀螺模式
-{
-    //	chassis.vx =remote_t .control .ch1_int16*(vx_max/660);
-    //	chassis .vy =remote_t .control .ch0_int16 *(vy_max /660);
-    CONTAL->BOTTOM.VW =3;
-    robot_run_USE_Gyro();
-}
-
-void  Chassis_Follow_Gimbal_gyro(CONTAL_Typedef *CONTAL,DBUS_Typedef *DBUS) {
-    follow_pid.Kp = 0.8;   // 需实测调整
-    follow_pid.Ki = 0.0;
-    follow_pid.Kd = 0.0;
-    float gimbal_angle = fmod(gimbal_gyro.yaw,360.0f);
-    if (gimbal_angle > 180) gimbal_angle -= 360;
-    else if (gimbal_angle < -180) gimbal_angle += 360;
-    float target_rel_angle = DBUS->Remote.CH2 * (180.0f / 660);
-    float angle_err = target_rel_angle - gimbal_angle;
-    //	float angle_err = -gimbal_angle;
-    // 将角度误差映射到 [-180,180] 避免反绕
-    if (angle_err > 180) angle_err -= 360;
-    if (angle_err < -180) angle_err += 360;
-
-    // PID 计算期望底盘转速（单位 rad/s）
-    CONTAL->BOTTOM.VW = follow_pid.Kp * angle_err + follow_pid.Kd * (angle_err - last_angle_err);
-    last_angle_err = angle_err;
-    if (CONTAL->BOTTOM.VW> w_max) CONTAL->BOTTOM.VW= w_max;
-    if (CONTAL->BOTTOM.VW< -w_max)  CONTAL->BOTTOM.VW= -w_max;
-
-
-    // double  angle_hd=(gimbal_angle +chassis.w *0.005)* PI / 180;//有正有负
-    float angle_deg = gimbal_angle + CONTAL->BOTTOM.VW* Time * 180 / PI; // 弧度转度
-    float angle_hd = angle_deg * PI / 180;
-   CONTAL->BOTTOM.VX =DBUS->Remote.CH1*(vx_max/660)*cos(angle_hd)-DBUS->Remote.CH0 *(vy_max /660)*sin(angle_hd);
-   CONTAL->BOTTOM.VY= DBUS->Remote.CH1*(vx_max/660)*sin(angle_hd)+DBUS->Remote.CH0 *(vy_max /660)*cos(angle_hd);//将云台的速度进行一定的转化，并将转化值赋值给底盘
-
-}
-
-void robot_run_USE_Gyro() {
-    Motor_Round_Resolve(&gimbal);
-    // float angle = fmod(gimbal_gyro.yaw  * 360.0f / 8192.0f, 360.0f);
-
-    if (gimbal_gyro.yaw > 180) gimbal_gyro.yaw -= 360;
-    else if (gimbal_gyro.yaw  < -180) gimbal_gyro.yaw += 360;
-    //double  angle_hd=(angle+chassis.w *0.005)* PI / 180;//有正有负
-    float angle_deg = gimbal_gyro.yaw + chassis.w * Time * 180 / PI; // 弧度转度
-    float angle_hd = angle_deg * PI / 180;
-    chassis.vx = remote_t .control .ch1_int16*(vx_max/660)*cos(angle_hd)-remote_t .control .ch0_int16 *(vy_max /660)*sin(angle_hd);
-    chassis.vy = remote_t .control .ch1_int16*(vx_max/660)*sin(angle_hd)+remote_t .control .ch0_int16 *(vy_max /660)*cos(angle_hd);//将云台的速度进行一定的转化，并将转化值赋值给底盘
-
-}//改了以后也不太知道对不对
