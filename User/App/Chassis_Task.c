@@ -1,5 +1,9 @@
 #include "Chassis_Task.h"
 #define OMNI_RATIO            ((30.0f / 3.14159265f) / 0.075f * 19.0f)
+
+static float s_last_angle_err = 0.0f;     // 上次跟随角度误差（用于微分）
+
+
 static float NormalizeAngle(float angle)//角度归一化
 {
     angle = fmodf(angle, 360.0f);
