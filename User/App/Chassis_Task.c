@@ -223,3 +223,16 @@ void Chassis_Follow_Gimbal(CONTAL_Typedef *CONTAL, DBUS_Typedef *DBUS, IMU_Data_
 
     /* 角度误差，映射到 [-180, 180] 防止反绕 */
     float angle_err = NormalizeAngle(target_deg - gimbal_deg);
+
+    /* PD 控制计算期望底盘转速 */
+    float vw = FOLLOW_KP * angle_err
+             + FOLLOW_KD * (angle_err - s_last_angle_err);
+    s_last_angle_err = angle_err;
+
+    /* 限幅 */
+    CONTAL->BOTTOM.VW = Clamp(vw, VW_MAX);
+
+    /* 坐标变换 + 全向轮逆解 */
+    ApplyGimbalTransform(CONTAL, DBUS, gimbal_deg);
+    OmniResolve(CONTAL);
+}
