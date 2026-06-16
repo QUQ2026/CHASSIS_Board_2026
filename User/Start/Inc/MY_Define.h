@@ -164,5 +164,47 @@
 #define FOLLOW_KI             0.0f
 #define FOLLOW_KD             0.1f
 
+//Gimbal_task
+/* ============ Yaw 轴参数 ============ */
+#define YAW_MOTOR_MAX_OUT       30000.0f    // 电机最大电流输出
+#define YAW_MOTOR_MAX_IOUT      2000.0f     // 积分限幅
+
+/* 外环（位置环）PID —— 输入：角度误差(度)，输出：目标角速度(rpm) */
+#define YAW_KP_P                1.0f        // ★ 需要实车调整
+#define YAW_KI_P                0.0f
+#define YAW_KD_P                0.0f
+
+/* 内环（速度环）PID —— 输入：速度误差(rpm)，输出：电流值 */
+#define YAW_KP_S                180.0f      // ★ 需要实车调整（原代码值）
+#define YAW_KI_S                0.0f
+#define YAW_KD_S                0.0f
+
+/* ============ Pitch 轴参数 ============ */
+#define PITCH_MOTOR_MAX_OUT     30000.0f
+#define PITCH_MOTOR_MAX_IOUT    2000.0f
+
+/* 外环（位置环）PID */
+#define PITCH_KP_P              1.0f        // ★ 需要实车调整
+#define PITCH_KI_P              0.0f
+#define PITCH_KD_P              0.0f
+
+/* 内环（速度环）PID */
+#define PITCH_KP_S              180.0f      // ★ 需要实车调整（原代码值）
+#define PITCH_KI_S              0.0f
+#define PITCH_KD_S              0.0f
+
+/* ============ 云台软限位（Pitch）============ */
+/* 根据你机器人的机械结构设置，防止云台撞到车身 */
+#define PITCH_ANGLE_MAX         20.0f       // ★ Pitch 向上最大角度（度）
+#define PITCH_ANGLE_MIN        -15.0f       // ★ Pitch 向下最大角度（度）
+
+
+/* 摇杆每次调用叠加的角速度（度/周期），越大云台转越快 */
+#define YAW_RC_SPEED            0.10f       // ★ 需要实车调整
+#define PITCH_RC_SPEED          0.05f       // ★ 需要实车调整
+/* 鼠标灵敏度 */
+#define YAW_MOUSE_SPEED         0.05f       // ★ 需要实车调整
+#define PITCH_MOUSE_SPEED       0.03f
+
 
 #endif
