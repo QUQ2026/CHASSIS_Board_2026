@@ -78,6 +78,33 @@ void RobotTask(uint8_t mode,
 
         case 2://云台
         {
+            switch (DBUS->Remote.S2)
+            {
+                case 1:
+                    /* 底盘跟随模式：云台目标锁定，底盘 PID 跟随 */
+                    Gimbal_Set_Target_Follow(CONTAL, DBUS, IMU_Data);
+                    break;
+
+                case 2:
+                    /* 普通模式：摇杆累加控制云台目标角度 */
+                    Gimbal_Set_Target_RC(CONTAL, DBUS, IMU_Data);
+                    break;
+
+                case 3:
+                    /* 小陀螺模式：摇杆控制云台，陀螺仪稳定云台绝对方向不变 */
+                    Gimbal_Set_Target_RC(CONTAL, DBUS, IMU_Data);
+                    break;
+
+                default:
+                    break;
+            }
+
+            /* -------- 串级PID计算 + CAN发送 -------- */
+            gimbal_task(CONTAL, Root, MOTOR, IMU_Data);
+
+            /* -------- 调试监视 -------- */
+            yaw_TD   = CONTAL->HEAD.Yaw;
+            pitch_TD = CONTAL->HEAD.Pitch;
 
         } break;
 
