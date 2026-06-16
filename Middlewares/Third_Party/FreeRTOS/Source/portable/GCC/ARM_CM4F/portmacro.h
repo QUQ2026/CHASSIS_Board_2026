@@ -28,6 +28,10 @@
 
 #ifndef PORTMACRO_H
 #define PORTMACRO_H
+#include <stdint.h>
+
+#include "FreeRTOSConfig.h"
+#include "projdefs.h"
 
 #ifdef __cplusplus
 extern "C" {
