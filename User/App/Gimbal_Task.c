@@ -18,7 +18,6 @@ static float Gimbal_Clamp(float val, float max, float min)//云台限幅
 
 uint8_t MOTOR_PID_Gimbal_INIT(MOTOR_Typdef *MOTOR)
 {
-    /* ----- Yaw 轴 ----- */
     float PID_P_Yaw[3] = { 1, 0, 0 };
     float PID_S_Yaw[3] = { 20, 0, 0 };
 
@@ -32,7 +31,6 @@ uint8_t MOTOR_PID_Gimbal_INIT(MOTOR_Typdef *MOTOR)
              PID_S_Yaw, 0, 0, 0, 0, 0,
              Integral_Limit | ErrorHandle);
 
-    /* ----- Pitch 轴 ----- */
     float PID_P_Pitch[3] = { 1, 0, 0 };
     float PID_S_Pitch[3] = { 20,0, 0};
 
@@ -54,33 +52,25 @@ uint8_t MOTOR_PID_Gimbal_INIT(MOTOR_Typdef *MOTOR)
 static void Gimbal_PID_Calculate(MOTOR_Typdef *MOTOR, IMU_Data_t *IMU,
                                   float target_yaw, float target_pitch)
 {
-    /* ---- Yaw 轴外环：角度误差 → 目标角速度 ---- */
     float yaw_angle_err = Gimbal_NormalizeAngle(target_yaw - IMU->yaw);
     PID_Calculate(&MOTOR->DJI_6020_Yaw.PID_P,
                   IMU->yaw,          // 当前反馈（绝对角度）
                   target_yaw);       // 目标角度
 
-    /* ---- Yaw 轴内环：角速度误差 → 电流 ---- */
     /* 外环输出作为内环目标，补偿底盘旋转：
-     * 小陀螺时底盘转速会叠加到云台上，
-     * 用 CONTAL->CG.YAW_SPEED（底盘yaw角速度）前馈补偿 */
+      小陀螺时底盘转速会叠加到云台上，
+      用 CONTAL->CG.YAW_SPEED（底盘yaw角速度）前馈补偿 */
     PID_Calculate(&MOTOR->DJI_6020_Yaw.PID_S,
                   (float)MOTOR->DJI_6020_Yaw.DATA.Speed_now,
                   MOTOR->DJI_6020_Yaw.PID_P.Output);
 
-    /* ---- Pitch 轴外环：角度误差 → 目标角速度 ---- */
     PID_Calculate(&MOTOR->DJI_6020_Pitch.PID_P,
                   IMU->pitch,        // 当前反馈
                   target_pitch);     // 目标角度
 
-    /* ---- Pitch 轴内环：角速度误差 → 电流 ---- */
     PID_Calculate(&MOTOR->DJI_6020_Pitch.PID_S,
                   (float)MOTOR->DJI_6020_Pitch.DATA.Speed_now,
                   MOTOR->DJI_6020_Pitch.PID_P.Output);
-
-    /* ---- CAN 发送（6020 电机用 0x2FF 帧发电压/电流）---- */
-    /* 注意：你的项目里 Yaw/Pitch 在哪条 CAN 线、哪个帧ID，
-     * 根据实际接线修改 &hcan1/&hcan2 和帧ID */
     DJI_Current_Ctrl(&hcan1,
                      0x1FF,
                      (int16_t)MOTOR->DJI_6020_Pitch.PID_S.Output,
@@ -98,29 +88,28 @@ uint8_t gimbal_task(CONTAL_Typedef          *CONTAL,
                     IMU_Data_t              *IMU)
 {
     static uint8_t PID_INIT = RUI_DF_ERROR;
-
-    /* 首次运行：初始化 PID */
+    //首次运行：初始化 PID
     if (PID_INIT != RUI_DF_READY)
     {
         PID_INIT = MOTOR_PID_Gimbal_INIT(MOTOR);
         return RUI_DF_ERROR;
     }
 
-    /* 遥控离线：云台锁定在当前位置（目标=当前）*/
+    // 遥控离线：云台锁定在当前位置（目标=当前）
     if (Root->RM_DBUS == RUI_DF_OFFLINE)
     {
         CONTAL->HEAD.Yaw   = IMU->yaw;
         CONTAL->HEAD.Pitch = IMU->pitch;
     }
 
-    /* Pitch 软限位（防止撞车身）*/
+    //Pitch 限位（防止撞车身）
     CONTAL->HEAD.Pitch = Gimbal_Clamp(CONTAL->HEAD.Pitch,
                                       PITCH_ANGLE_MAX,
                                       PITCH_ANGLE_MIN);
 
     /* 底盘跟随用的相对角度（给 Chassis_Task 用）
-     * = 云台相对底盘偏转角（编码器值转换为角度）
-     * 底盘会读这个值来决定跟随方向 */
+      = 云台相对底盘偏转角（编码器值转换为角度）
+      底盘会读这个值来决定跟随方向 */
     CONTAL->CG.RELATIVE_ANGLE =
         -(int16_t)(CONTAL->CG.YAW_INIT_ANGLE - MOTOR->DJI_6020_Yaw.DATA.Angle_now);
 
@@ -141,12 +130,10 @@ void Gimbal_Set_Target_RC(CONTAL_Typedef *CONTAL,
                           IMU_Data_t     *IMU)
 {
     /* Yaw：左摇杆左右（CH2）累加
-     * 摇杆最大值 660 时，每个周期累加 YAW_RC_SPEED 度
-     * 实际转速 = YAW_RC_SPEED * (CH2/660) * 任务频率(Hz) */
+     摇杆最大值 660 时，每个周期累加 YAW_RC_SPEED 度
+      实际转速 = YAW_RC_SPEED * (CH2/660) * 任务频率(Hz) */
     CONTAL->HEAD.Yaw += DBUS->Remote.CH2 * (YAW_RC_SPEED / REMOTE_SCALE);
 
-    /* Pitch：右摇杆上下（CH1）累加，有软限位
-     * 注意：CH1 上推为正还是负取决于你的接收机通道定义，符号可能要反 */
     CONTAL->HEAD.Pitch += DBUS->Remote.CH1 * (PITCH_RC_SPEED / REMOTE_SCALE);
 
     /* Yaw 不做限幅，可以无限旋转（用 IMU 绝对角度控制）

@@ -228,23 +228,20 @@ void Chassis_Follow_Gimbal(CONTAL_Typedef *CONTAL, DBUS_Typedef *DBUS, IMU_Data_
     float gimbal_deg = NormalizeAngle(IMU->yaw);
 
     /* 期望云台对准的角度：通常为 0（正前方）
-     * 若需要遥控拨轮微调方向，可用 CH2 映射；默认跟随正前方，target=0 */
+      若需要遥控拨轮微调方向，可用 CH2 映射；默认跟随正前方，target=0 */
     float target_deg = 0.0f;
     /* 如需拨轮微调，取消下行注释：
-     * target_deg = DBUS->Remote.CH2 * (180.0f / REMOTE_SCALE); */
+     target_deg = DBUS->Remote.CH2 * (180.0f / REMOTE_SCALE); */
 
-    /* 角度误差，映射到 [-180, 180] 防止反绕 */
+    //角度误差，映射到 [-180, 180] 防止反绕
     float angle_err = NormalizeAngle(target_deg - gimbal_deg);
 
-    /* PD 控制计算期望底盘转速 */
+    // PD 控制计算期望底盘转速
     float vw = FOLLOW_KP * angle_err
              + FOLLOW_KD * (angle_err - s_last_angle_err);
     s_last_angle_err = angle_err;
 
-    /* 限幅 */
     CONTAL->BOTTOM.VW = Clamp(vw, VW_MAX);
-
-    /* 坐标变换 + 全向轮逆解 */
     ApplyGimbalTransform(CONTAL, DBUS, gimbal_deg);
     OmniResolve(CONTAL);
 }
