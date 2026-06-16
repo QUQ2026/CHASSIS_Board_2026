@@ -19,50 +19,68 @@ static float Clamp(float val, float limit)//限幅
     return val;
 }
 
-/**
-* @brief  坐标变换：将云台坐标系下的 VX/VY 转换到底盘坐标系，并写入 CONTAL->BOTTOM
- * @param  CONTAL        底盘控制结构体
- * @param  DBUS          遥控数据
- * @param  gimbal_deg    云台相对底盘的偏角（度），正方向：云台左转为正
- *
- * @note   引入前馈：用当前底盘转速预测一个周期后的角度，减小坐标偏移
- */
+
 static void ApplyGimbalTransform(CONTAL_Typedef *CONTAL,
                                  DBUS_Typedef   *DBUS,
                                  float           gimbal_deg)
 {
-    /* 前馈：预测下一周期底盘转到哪 */
+    // 前馈：预测下一周期底盘转到哪
     float angle_rad = (gimbal_deg + CONTAL->BOTTOM.VW * CHASSIS_LOOP_TIME* (180.0f / 3.14159265f))
                       * (3.14159265f / 180.0f);
 
     float vx_rc = DBUS->Remote.CH1 * (VX_MAX / 660.0);  // 遥控 → m/s
     float vy_rc = DBUS->Remote.CH0 * (VY_MAX / 660.0);
 
-    /* 旋转矩阵：将遥控输入旋转到底盘系 */
+    //旋转矩阵：将遥控输入旋转到底盘系
     CONTAL->BOTTOM.VX =  vx_rc * cosf(angle_rad) - vy_rc * sinf(angle_rad);
     CONTAL->BOTTOM.VY =  vx_rc * sinf(angle_rad) + vy_rc * cosf(angle_rad);
 }
 
 
-static void OmniResolve(CONTAL_Typedef *CONTAL)
+static void OmniResolve(CONTAL_Typedef *CONTAL)//全向底盘
 {
     float vx = CONTAL->BOTTOM.VX;
     float vy = CONTAL->BOTTOM.VY;
-    float vw = CONTAL->BOTTOM.VW * 0.25f;   /* 旋转半径系数，需实车标定 */
+    float vw = CONTAL->BOTTOM.VW * 0.25f;   //旋转半径系数，需实车标定
 
-    CONTAL->BOTTOM.wheel1 = ( vx + vy + vw) * OMNI_RATIO;  /* Chassis_3 */
-    CONTAL->BOTTOM.wheel2 = (-vx + vy + vw) * OMNI_RATIO;  /* Chassis_4 */
-    CONTAL->BOTTOM.wheel3 = (-vx - vy + vw) * OMNI_RATIO;  /* Chassis_1 */
-    CONTAL->BOTTOM.wheel4 = ( vx - vy + vw) * OMNI_RATIO;  /* Chassis_2 */
+    CONTAL->BOTTOM.wheel1 = ( vx + vy + vw) * OMNI_RATIO;  // Chassis_3
+    CONTAL->BOTTOM.wheel2 = (-vx + vy + vw) * OMNI_RATIO;  // Chassis_4
+    CONTAL->BOTTOM.wheel3 = (-vx - vy + vw) * OMNI_RATIO;  // Chassis_1
+    CONTAL->BOTTOM.wheel4 = ( vx - vy + vw) * OMNI_RATIO;  // Chassis_2
+}
+/*
+static void MecanumResolve(CONTAL_Typedef *CONTAL)//麦轮底盘
+{
+    float vx = CONTAL->BOTTOM.VX;
+    float vy = CONTAL->BOTTOM.VY;
+    float vw = CONTAL->BOTTOM.VW * 0.25f;   //旋转半径系数，需实车标定
+
+    CONTAL->BOTTOM.wheel1 = ( vx -vy -vw) * OMNI_RATIO;  // Chassis_3
+    CONTAL->BOTTOM.wheel2 = (vx + vy + vw) * OMNI_RATIO;  // Chassis_4
+    CONTAL->BOTTOM.wheel3 = (vx - vy -vw) * OMNI_RATIO;  // Chassis_1
+    CONTAL->BOTTOM.wheel4 = ( -vx + vy + vw) * OMNI_RATIO;  // Chassis_2
 }
 
 
+static void SteeringResolve(CONTAL_Typedef *CONTAL)//舵轮底盘
+{
+    float vx = CONTAL->BOTTOM.VX;
+    float vy = CONTAL->BOTTOM.VY;
+    float vw = CONTAL->BOTTOM.VW * 0.25f;   //旋转半径系数，需实车标定
+
+    CONTAL->BOTTOM.wheel1 = =sqrt(pow(vx-sqrt(2)/2*vw,2)+pow(vy-sqrt(2)/2*vw ,2))* OMNI_RATIO;  // Chassis_3
+    CONTAL->BOTTOM.wheel2 = sqrt(pow(vx+sqrt(2)/2*vw,2)+pow(vy-sqrt(2)/2*vw ,2))* OMNI_RATIO;  // Chassis_4
+    CONTAL->BOTTOM.wheel3 = sqrt(pow(vx-sqrt(2)/2*vw,2)+pow(vy+sqrt(2)/2*vw ,2)) * OMNI_RATIO;  // Chassis_1
+    CONTAL->BOTTOM.wheel4 = sqrt(pow(vx+sqrt(2)/2*vw,2)+pow(vy+sqrt(2)/2*vw ,2))* OMNI_RATIO;  // Chassis_2
+}
+
+*/
 uint8_t Motor_PID_Chassis_Init(MOTOR_Typdef *MOTOR)
 {
-    float PID_S_1[3] = {   3.0f,   0.0f,   0.0f   };
-    float PID_S_2[3] = {   3.0f,   0.0f,   0.0f   };
-    float PID_S_3[3] = {   3.0f,   0.0f,   0.0f   };
-    float PID_S_4[3] = {   3.0f,   0.0f,   0.0f   };
+    float PID_S_1[3] = {   10.0f,   0.1f,   0.0f   };
+    float PID_S_2[3] = {   10.0f,   0.1f,   0.0f   };
+    float PID_S_3[3] = {   10.0f,   0.1f,   0.0f   };
+    float PID_S_4[3] = {   10.0f,   0.1f,   0.0f   };
     PID_Init(&MOTOR->DJI_3508_Chassis_1.PID_S, 16384.0f, 1000.0f,
             PID_S_1, 0, 0,
             0, 0, 0,
@@ -128,7 +146,7 @@ uint8_t chassis_task(CONTAL_Typedef *CONTAL,
     MOTOR->DJI_3508_Chassis_1.DATA.Aim = CONTAL->BOTTOM.wheel3*4.0f;
     MOTOR->DJI_3508_Chassis_2.DATA.Aim = CONTAL->BOTTOM.wheel4*4.0f;
     //		}
-    //    /*遥控离线保护
+    //遥控离线保护
     if(Root->RM_DBUS==0)
     {
         CONTAL->BOTTOM.wheel1 = 0;
@@ -157,17 +175,13 @@ uint8_t chassis_task(CONTAL_Typedef *CONTAL,
 
     /*总输出计算*/
     float Out_put[4];
-    Out_put[0] = /*MOTOR->DJI_3508_Chassis_1.PID_F.Output*/0 +
-               MOTOR->DJI_3508_Chassis_1.PID_S.Output;
+    Out_put[0] = MOTOR->DJI_3508_Chassis_1.PID_S.Output;//可在前面加一个前馈
 
-    Out_put[1] = /*MOTOR->DJI_3508_Chassis_2.PID_F.Output*/0 +
-               MOTOR->DJI_3508_Chassis_2.PID_S.Output;
+    Out_put[1] = MOTOR->DJI_3508_Chassis_2.PID_S.Output;
 
-    Out_put[2] = /*MOTOR->DJI_3508_Chassis_3.PID_F.Output*/0 +
-               MOTOR->DJI_3508_Chassis_3.PID_S.Output;
+    Out_put[2] = MOTOR->DJI_3508_Chassis_3.PID_S.Output;
 
-    Out_put[3] = /*MOTOR->DJI_3508_Chassis_4.PID_F.Output*/0 +
-               MOTOR->DJI_3508_Chassis_4.PID_S.Output;
+    Out_put[3] = MOTOR->DJI_3508_Chassis_4.PID_S.Output;
 
     /*CAN发送*/
     DJI_Current_Ctrl(&hcan1,
@@ -202,7 +216,7 @@ void Chassis_Gyroscope(CONTAL_Typedef *CONTAL, DBUS_Typedef *DBUS, IMU_Data_t *I
     CONTAL->BOTTOM.VW = GYROSCOPE_W;
 
     /* 使用陀螺仪 yaw（不修改原始值，局部变量归一化）*/
-    float gimbal_deg = NormalizeAngle(IMU->yaw);
+    float gimbal_deg =NormalizeAngle(IMU->yaw);
 
     /* 坐标变换 + 全向轮逆解 */
     ApplyGimbalTransform(CONTAL, DBUS, gimbal_deg);

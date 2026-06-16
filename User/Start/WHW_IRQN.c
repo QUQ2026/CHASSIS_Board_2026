@@ -34,7 +34,7 @@ void StartMoveTask(void const * argument)
 				  &RUI_ROOT_STATUS,
 				  &ALL_MOTOR,
 				  &IMU_Data,
-				  &TDDD,
+				  &TDDDD ,
 				  &VT13);
 
     	/* ---- 底盘速度目标计算（case 1）---- */
@@ -47,7 +47,7 @@ void StartMoveTask(void const * argument)
 				  &RUI_ROOT_STATUS,
 				  &ALL_MOTOR,
 				  &IMU_Data,
-				  &TDDD,
+				  &TDDDD,
 				  &VT13);
 
     	/* ---- 云台串级PID计算 + CAN发送 ---- */
@@ -61,7 +61,7 @@ void StartMoveTask(void const * argument)
 					 &RUI_ROOT_STATUS,
 					 &User_data,
 					 &model,
-					 &CAP_GET,
+					 &CAPDATE.GET,
 					 &ALL_MOTOR);
 
     	currentTimeMove += 1;

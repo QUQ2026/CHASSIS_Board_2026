@@ -16,6 +16,7 @@ uint8_t Referee_Rx_Buf[2][REFEREE_RXFRAME_LENGTH];
 //测试
 uint8_t RX[20];
 TD_t TDDDD;
+
 //电机
 MOTOR_Typdef ALL_MOTOR;
 
@@ -113,9 +114,9 @@ void StartDefaultTask(void const * argument)
 //		playSong_huluwa();
 //		playSong_jiaofu();
         cnt++;
-        LOGI("Hello world: %d", cnt);
-        LOGE("This is an error message!");
-        LOGW("This is a warning message!");
+//        LOGI("Hello world: %d", cnt);
+//        LOGE("This is an error message!");
+//        LOGW("This is a warning message!");
 		osDelay(1);
 	}
 }

@@ -159,18 +159,3 @@ void DJI_Current_Ctrl(hcan_t* hcan, uint16_t stdid, int16_t num1, int16_t num2, 
 
     canx_send_data(hcan, stdid, Data);
 }
-void Motor_Round_Resolve(DJI_MOTOR_Typedef *motor)//过零检测
-{
-    if(motor->DATA.Angle_now-motor->DATA.Angle_last <-4096)
-    {
-        motor->DATA.Laps--;
-    }
-    if(motor->data .rawEncode -motor->data .lastRawEncode >4096)
-
-    {
-        motor->data .round ++;
-    }//电机可能疯转的原因之一(++和--搞反)
-
-    motor->data .conEncode =motor->data .round *8192+motor->data .rawEncode ;
-    //motor->data .lastRawEncode=motor->data .rawEncode ;
-}

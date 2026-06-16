@@ -11,6 +11,7 @@
 #include "WHW_IRQN.h"
 #include "controller.h"
 static float Gimbal_Clamp(float val, float max, float min);
+static float Gimbal_NormalizeAngle(float angle);
 uint8_t MOTOR_PID_Gimbal_INIT(MOTOR_Typdef *MOTOR);
 static void Gimbal_PID_Calculate(MOTOR_Typdef *MOTOR, IMU_Data_t *IMU,
                                   float target_yaw, float target_pitch);

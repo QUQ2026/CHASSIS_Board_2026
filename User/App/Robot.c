@@ -47,17 +47,14 @@ void RobotTask(uint8_t mode,
             switch ((Chassis_Mode_e)DBUS->Remote.S2)
             {
                 case CHASSIS_MODE_FOLLOW:
-                    /* 底盘跟随云台：PID 驱动底盘对准云台方向，平移仍以云台视角 */
                     Chassis_Follow_Gimbal(CONTAL, DBUS, IMU_Data);
                     break;
 
                 case CHASSIS_MODE_NORMAL:
-                    /* 普通模式：拨轮控制旋转，平移以云台视角（编码器）*/
                     Chassis_Normal(CONTAL, DBUS, MOTOR);
                     break;
 
                 case CHASSIS_MODE_GYRO:
-                    /* 小陀螺：底盘固定转速自旋，操作手仍可平移 */
                     Chassis_Gyroscope(CONTAL, DBUS, IMU_Data);
                     break;
 
@@ -81,7 +78,7 @@ void RobotTask(uint8_t mode,
             switch (DBUS->Remote.S2)
             {
                 case 1:
-                    /* 底盘跟随模式：云台目标锁定，底盘 PID 跟随 */
+                    //底盘跟随模式：云台目标锁定，底盘 PID 跟随
                     Gimbal_Set_Target_Follow(CONTAL, DBUS, IMU_Data);
                     break;
 
@@ -107,7 +104,6 @@ void RobotTask(uint8_t mode,
             pitch_TD = CONTAL->HEAD.Pitch;
 
         } break;
-
         case 3://电容
         {
 

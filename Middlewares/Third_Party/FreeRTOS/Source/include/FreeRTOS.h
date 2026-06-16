@@ -32,7 +32,6 @@
  * Include the generic headers required for the FreeRTOS port being used.
  */
 #include <stddef.h>
-#include "portmacro.h"
 
 /*
  * If stdint.h cannot be located then:
