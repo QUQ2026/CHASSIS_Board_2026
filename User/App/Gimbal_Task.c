@@ -80,6 +80,7 @@ static void Gimbal_PID_Calculate(MOTOR_Typdef *MOTOR, IMU_Data_t *IMU,
 }
 
 
+
 uint8_t gimbal_task(CONTAL_Typedef          *CONTAL,
                     RUI_ROOT_STATUS_Typedef  *Root,
                     MOTOR_Typdef            *MOTOR,
@@ -108,8 +109,7 @@ uint8_t gimbal_task(CONTAL_Typedef          *CONTAL,
     /* 底盘跟随用的相对角度（给 Chassis_Task 用）
       = 云台相对底盘偏转角（编码器值转换为角度）
       底盘会读这个值来决定跟随方向 */
-    CONTAL->CG.RELATIVE_ANGLE =
-        -(int16_t)(CONTAL->CG.YAW_INIT_ANGLE - MOTOR->DJI_6020_Yaw.DATA.Angle_now);
+    CONTAL->CG.RELATIVE_ANGLE =-(int16_t)(CONTAL->CG.YAW_INIT_ANGLE - MOTOR->DJI_6020_Yaw.DATA.Angle_now);
 
     /* 底盘yaw角速度（给底盘前馈补偿用）*/
     CONTAL->CG.YAW_SPEED = MOTOR->DJI_6020_Yaw.DATA.Speed_now;

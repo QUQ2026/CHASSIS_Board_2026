@@ -43,7 +43,7 @@ void RobotTask(uint8_t mode,
                 break;
             }
 
-            /* -------- 底盘模式选择（S2 拨轮）-------- */
+            //底盘模式选择（S2 拨轮）
             switch ((Chassis_Mode_e)DBUS->Remote.S2)
             {
                 case CHASSIS_MODE_FOLLOW:
