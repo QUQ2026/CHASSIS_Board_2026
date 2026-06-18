@@ -1,5 +1,5 @@
 #include  "Gimbal_Task.h"
-//云台pitch轴缺一个重力补偿
+//云台pitch轴缺一个重力补偿,先限位来解决
 
 
 static float Gimbal_NormalizeAngle(float angle)//角度归一化
@@ -134,11 +134,8 @@ void Gimbal_Set_Target_RC(CONTAL_Typedef *CONTAL,
 
     CONTAL->HEAD.Pitch += DBUS->Remote.CH1 * (PITCH_RC_SPEED / REMOTE_SCALE);
 
-    /* Yaw 不做限幅，可以无限旋转（用 IMU 绝对角度控制）
-     * 归一化防止浮点数越界 */
     CONTAL->HEAD.Yaw = Gimbal_NormalizeAngle(CONTAL->HEAD.Yaw);
-
-    /* Pitch 限位 */
+    // Pitch 限位
     CONTAL->HEAD.Pitch = Gimbal_Clamp(CONTAL->HEAD.Pitch,
                                       PITCH_ANGLE_MAX,
                                       PITCH_ANGLE_MIN);
@@ -148,7 +145,7 @@ void Gimbal_Set_Target_RC(CONTAL_Typedef *CONTAL,
  /*模式3：底盘跟随云台
 Yaw 目标锁定为 0（正前方），Pitch 由摇杆控制
    此时底盘会用 PID 去追 CONTAL->CG.RELATIVE_ANGLE=0，
-   即让云台相对底盘的偏角为零 → 底盘跟上云台*/
+   即让云台相对底盘的偏角为零， 底盘跟上云台*/
 
 void Gimbal_Set_Target_Follow(CONTAL_Typedef *CONTAL,
                                DBUS_Typedef   *DBUS,
@@ -161,7 +158,7 @@ void Gimbal_Set_Target_Follow(CONTAL_Typedef *CONTAL,
      *CONTAL->HEAD.Yaw = Gimbal_NormalizeAngle(CONTAL->HEAD.Yaw);
      */
 
-    /* Pitch：摇杆累加 */
+    //Pitch：摇杆累加
     CONTAL->HEAD.Pitch += DBUS->Remote.CH1 * (PITCH_RC_SPEED / REMOTE_SCALE);
     CONTAL->HEAD.Pitch  = Gimbal_Clamp(CONTAL->HEAD.Pitch,
                                        PITCH_ANGLE_MAX,

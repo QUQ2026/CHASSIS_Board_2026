@@ -77,10 +77,10 @@ static void SteeringResolve(CONTAL_Typedef *CONTAL)//舵轮底盘
 */
 uint8_t Motor_PID_Chassis_Init(MOTOR_Typdef *MOTOR)
 {
-    float PID_S_1[3] = {   10.0f,   0.1f,   0.0f   };
-    float PID_S_2[3] = {   10.0f,   0.1f,   0.0f   };
-    float PID_S_3[3] = {   10.0f,   0.1f,   0.0f   };
-    float PID_S_4[3] = {   10.0f,   0.1f,   0.0f   };
+    float PID_S_1[3] = {   5.0f,   0.1f,   0.0f   };
+    float PID_S_2[3] = {   5.0f,   0.1f,   0.0f   };
+    float PID_S_3[3] = {   5.0f,   0.1f,   0.0f   };
+    float PID_S_4[3] = {   5.0f,   0.1f,   0.0f   };
     PID_Init(&MOTOR->DJI_3508_Chassis_1.PID_S, 16384.0f, 1000.0f,
             PID_S_1, 0, 0,
             0, 0, 0,
@@ -197,12 +197,9 @@ void Chassis_Normal(CONTAL_Typedef *CONTAL, DBUS_Typedef *DBUS, MOTOR_Typdef *MO
 {
     //旋转速度：拨轮映射
     CONTAL->BOTTOM.VW = DBUS->Remote.CH3 * (VW_MAX / REMOTE_SCALE);
-
     //读取 Yaw 电机编码器，计算云台相对底盘偏角（度）
     float raw_angle = fmodf(MOTOR->DJI_6020_Yaw.DATA.Angle_now * 360.0f / 8192.0f, 360.0f);
     float gimbal_deg = NormalizeAngle(raw_angle);
-
-    // 坐标变换 + 全向轮逆解
     ApplyGimbalTransform(CONTAL, DBUS, gimbal_deg);
     OmniResolve(CONTAL);
 }
@@ -210,13 +207,11 @@ void Chassis_Normal(CONTAL_Typedef *CONTAL, DBUS_Typedef *DBUS, MOTOR_Typdef *MO
 
 void Chassis_Gyroscope(CONTAL_Typedef *CONTAL, DBUS_Typedef *DBUS, IMU_Data_t *IMU)//小陀螺
 {
-    /* 固定旋转速度 */
     CONTAL->BOTTOM.VW = GYROSCOPE_W;
 
-    /* 使用陀螺仪 yaw（不修改原始值，局部变量归一化）*/
+    // 使用陀螺仪 yaw（不修改原始值，局部变量归一化）
     float gimbal_deg =NormalizeAngle(IMU->yaw);
 
-    /* 坐标变换 + 全向轮逆解 */
     ApplyGimbalTransform(CONTAL, DBUS, gimbal_deg);
     OmniResolve(CONTAL);
 }

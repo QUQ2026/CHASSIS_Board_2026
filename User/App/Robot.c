@@ -11,7 +11,7 @@ typedef enum {
     CHASSIS_MODE_FOLLOW   = 1,  // 底盘跟随云台（陀螺仪）
     CHASSIS_MODE_NORMAL   = 2,  // 普通模式（拨轮控制旋转）
     CHASSIS_MODE_GYRO     = 3,  // 小陀螺模式（固定自旋）
-} Chassis_Mode_e;//这个写头文件该咋引用
+} Chassis_Mode_e;
 
 void RobotTask(uint8_t mode,
                DBUS_Typedef *DBUS,
@@ -83,16 +83,17 @@ void RobotTask(uint8_t mode,
                     break;
 
                 case 2:
-                    /* 普通模式：摇杆累加控制云台目标角度 */
+                    //普通模式：摇杆累加控制云台目标角度
                     Gimbal_Set_Target_RC(CONTAL, DBUS, IMU_Data);
                     break;
 
                 case 3:
-                    /* 小陀螺模式：摇杆控制云台，陀螺仪稳定云台绝对方向不变 */
+                    //小陀螺模式：摇杆控制云台，陀螺仪稳定云台绝对方向不变
                     Gimbal_Set_Target_RC(CONTAL, DBUS, IMU_Data);
                     break;
 
                 default:
+
                     break;
             }
 

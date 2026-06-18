@@ -24,7 +24,6 @@ void StartMoveTask(void const * argument)
 
     for (;;)
     {
-    	/* ---- 云台目标角度计算（case 2）---- */
     	RobotTask(2,
 				  &DBUS,
 				  &RUI_V_CONTAL,
@@ -37,7 +36,6 @@ void StartMoveTask(void const * argument)
 				  &TDDDD ,
 				  &VT13);
 
-    	/* ---- 底盘速度目标计算（case 1）---- */
     	RobotTask(1,
 				  &DBUS,
 				  &RUI_V_CONTAL,
@@ -50,7 +48,6 @@ void StartMoveTask(void const * argument)
 				  &TDDDD,
 				  &VT13);
 
-    	/* ---- 云台串级PID计算 + CAN发送 ---- */
     	gimbal_task(&RUI_V_CONTAL,
 					&RUI_ROOT_STATUS,
 					&ALL_MOTOR,

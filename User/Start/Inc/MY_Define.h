@@ -193,7 +193,7 @@
 #define PITCH_KI_S              0.0f
 #define PITCH_KD_S              0.0f
 
-/* ============ 云台软限位（Pitch）============ */
+//云台限位
 /* 根据你机器人的机械结构设置，防止云台撞到车身 */
 #define PITCH_ANGLE_MAX         20.0f
 #define PITCH_ANGLE_MIN        -15.0f
