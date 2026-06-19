@@ -143,10 +143,6 @@ uint8_t chassis_task(CONTAL_Typedef *CONTAL,
         PID_INIT = Motor_PID_Chassis_Init(MOTOR);
         return RUI_DF_ERROR;
     }
-    MOTOR->DJI_3508_Chassis_3.DATA.Aim = CONTAL->BOTTOM.wheel1*4.0f;
-    MOTOR->DJI_3508_Chassis_4.DATA.Aim = CONTAL->BOTTOM.wheel2*4.0f;
-    MOTOR->DJI_3508_Chassis_1.DATA.Aim = CONTAL->BOTTOM.wheel3*4.0f;
-    MOTOR->DJI_3508_Chassis_2.DATA.Aim = CONTAL->BOTTOM.wheel4*4.0f;
     //遥控离线保护
     if(Root->RM_DBUS==0)
     {
@@ -155,6 +151,12 @@ uint8_t chassis_task(CONTAL_Typedef *CONTAL,
         CONTAL->BOTTOM.wheel3 = 0;
         CONTAL->BOTTOM.wheel4 =0;
     }
+
+    MOTOR->DJI_3508_Chassis_3.DATA.Aim = CONTAL->BOTTOM.wheel1*4.0f;
+    MOTOR->DJI_3508_Chassis_4.DATA.Aim = CONTAL->BOTTOM.wheel2*4.0f;
+    MOTOR->DJI_3508_Chassis_1.DATA.Aim = CONTAL->BOTTOM.wheel3*4.0f;
+    MOTOR->DJI_3508_Chassis_2.DATA.Aim = CONTAL->BOTTOM.wheel4*4.0f;
+
     PID_Calculate(&MOTOR->DJI_3508_Chassis_1.PID_S,
                      (float)MOTOR->DJI_3508_Chassis_1.DATA.Speed_now,
                      MOTOR->DJI_3508_Chassis_1.DATA.Aim);
@@ -164,9 +166,9 @@ uint8_t chassis_task(CONTAL_Typedef *CONTAL,
     PID_Calculate(&MOTOR->DJI_3508_Chassis_3.PID_S,
                  (float)MOTOR->DJI_3508_Chassis_3.DATA.Speed_now,
                  MOTOR->DJI_3508_Chassis_3.DATA.Aim);
-    PID_Calculate(&MOTOR->DJI_3508_Chassis_3.PID_S,
-                 (float)MOTOR->DJI_3508_Chassis_3.DATA.Speed_now,
-                 MOTOR->DJI_3508_Chassis_3.DATA.Aim);
+    PID_Calculate(&MOTOR->DJI_3508_Chassis_4.PID_S,
+                 (float)MOTOR->DJI_3508_Chassis_4.DATA.Speed_now,
+                 MOTOR->DJI_3508_Chassis_4.DATA.Aim);
    //功率控制
     chassis_power_control(CONTAL,
                              User_data,

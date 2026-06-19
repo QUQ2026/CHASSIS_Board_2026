@@ -53,7 +53,7 @@ void StartMoveTask(void const * argument)
 					&ALL_MOTOR,
 					&IMU_Data);
 
-    	/* ---- 底盘速度PID + 功率控制 + CAN发送 ---- */
+    	// 底盘速度PID + 功率控制 + CAN发送
     	chassis_task(&RUI_V_CONTAL,
 					 &RUI_ROOT_STATUS,
 					 &User_data,
