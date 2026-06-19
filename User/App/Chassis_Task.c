@@ -48,7 +48,7 @@ static void OmniResolve(CONTAL_Typedef *CONTAL)//全向底盘
     CONTAL->BOTTOM.wheel3 = (-vx - vy + vw) * OMNI_RATIO;  // Chassis_1
     CONTAL->BOTTOM.wheel4 = ( vx - vy + vw) * OMNI_RATIO;  // Chassis_2
 }
-/*
+
 static void MecanumResolve(CONTAL_Typedef *CONTAL)//麦轮底盘
 {
     float vx = CONTAL->BOTTOM.VX;
@@ -62,6 +62,7 @@ static void MecanumResolve(CONTAL_Typedef *CONTAL)//麦轮底盘
 }
 
 
+/*
 static void SteeringResolve(CONTAL_Typedef *CONTAL)//舵轮底盘
 {
     float vx = CONTAL->BOTTOM.VX;
@@ -77,6 +78,7 @@ static void SteeringResolve(CONTAL_Typedef *CONTAL)//舵轮底盘
 */
 uint8_t Motor_PID_Chassis_Init(MOTOR_Typdef *MOTOR)
 {
+
     float PID_S_1[3] = {   5.0f,   0.1f,   0.0f   };
     float PID_S_2[3] = {   5.0f,   0.1f,   0.0f   };
     float PID_S_3[3] = {   5.0f,   0.1f,   0.0f   };
@@ -201,7 +203,8 @@ void Chassis_Normal(CONTAL_Typedef *CONTAL, DBUS_Typedef *DBUS, MOTOR_Typdef *MO
     float raw_angle = fmodf(MOTOR->DJI_6020_Yaw.DATA.Angle_now * 360.0f / 8192.0f, 360.0f);
     float gimbal_deg = NormalizeAngle(raw_angle);
     ApplyGimbalTransform(CONTAL, DBUS, gimbal_deg);
-    OmniResolve(CONTAL);
+    //OmniResolve(CONTAL);
+    MecanumResolve(CONTAL);
 }
 
 
@@ -213,33 +216,11 @@ void Chassis_Gyroscope(CONTAL_Typedef *CONTAL, DBUS_Typedef *DBUS, IMU_Data_t *I
     float gimbal_deg =NormalizeAngle(IMU->yaw);
 
     ApplyGimbalTransform(CONTAL, DBUS, gimbal_deg);
-    OmniResolve(CONTAL);
+    MecanumResolve(CONTAL);
 }
 
 
-// void Chassis_Follow_Gimbal(CONTAL_Typedef *CONTAL, DBUS_Typedef *DBUS, IMU_Data_t *IMU)//底盘跟随
-// {
-//     //读取云台偏角（陀螺仪 yaw，归一化到 [-180, 180]）
-//     float gimbal_deg = NormalizeAngle(IMU->yaw);
-//
-//     /* 期望云台对准的角度：通常为 0（正前方）
-//       若需要遥控拨轮微调方向，可用 CH2 映射；默认跟随正前方，target=0 */
-//     float target_deg = 0.0f;
-//     /* 如需拨轮微调，取消下行注释：
-//      target_deg = DBUS->Remote.CH2 * (180.0f / REMOTE_SCALE); */
-//
-//     //角度误差，映射到 [-180, 180] 防止反绕
-//     float angle_err = NormalizeAngle(target_deg - gimbal_deg);
-//
-//     // PD 控制计算期望底盘转速
-//     float vw = FOLLOW_KP * angle_err
-//              + FOLLOW_KD * (angle_err - s_last_angle_err);
-//     s_last_angle_err = angle_err;
-//
-//     CONTAL->BOTTOM.VW = Clamp(vw, VW_MAX);
-//     ApplyGimbalTransform(CONTAL, DBUS, gimbal_deg);
-//     OmniResolve(CONTAL);
-// }
+
 
 
 void Chassis_Follow_Gimbal(CONTAL_Typedef *CONTAL, DBUS_Typedef *DBUS, IMU_Data_t *IMU)
@@ -254,7 +235,8 @@ void Chassis_Follow_Gimbal(CONTAL_Typedef *CONTAL, DBUS_Typedef *DBUS, IMU_Data_
     // 坐标转换：IMU->yaw = 云台绝对角度
     float gimbal_deg = NormalizeAngle(IMU->yaw);
     ApplyGimbalTransform(CONTAL, DBUS, gimbal_deg);
-    OmniResolve(CONTAL);
+   // OmniResolve(CONTAL);
+    MecanumResolve(CONTAL);
 }
 
 

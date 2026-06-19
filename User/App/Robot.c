@@ -18,8 +18,7 @@ void RobotTask(uint8_t mode,
                CONTAL_Typedef *CONTAL,
                User_Data_T *User_data,
                CAPDATE_TYPDEF *CAP_DATA,
-               TYPEDEF_VISION *Vision/* 普通视觉*/
-							/*	VisionRxDataUnion *Vision 加预测视觉*/,
+               TYPEDEF_VISION *Vision,
                RUI_ROOT_STATUS_Typedef *Root,
                MOTOR_Typdef *MOTOR,
                IMU_Data_t *IMU_Data,
@@ -59,17 +58,12 @@ void RobotTask(uint8_t mode,
                     break;
 
                 default:
-                    /* 未知模式：停止 */
                     CONTAL->BOTTOM.VX = 0.0f;
                     CONTAL->BOTTOM.VY = 0.0f;
                     CONTAL->BOTTOM.VW = 0.0f;
                     break;
             }
 
-            /* -------- 调试监视 -------- */
-            monitor_X = CONTAL->BOTTOM.VX;
-            monitor_Y = CONTAL->BOTTOM.VY;
-            monitor_W = CONTAL->BOTTOM.VW;
 
         } break;
 
@@ -96,13 +90,8 @@ void RobotTask(uint8_t mode,
 
                     break;
             }
-
-            /* -------- 串级PID计算 + CAN发送 -------- */
             gimbal_task(CONTAL, Root, MOTOR, IMU_Data);
 
-            /* -------- 调试监视 -------- */
-            yaw_TD   = CONTAL->HEAD.Yaw;
-            pitch_TD = CONTAL->HEAD.Pitch;
 
         } break;
         case 3://电容

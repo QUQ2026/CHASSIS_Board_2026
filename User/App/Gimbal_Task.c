@@ -18,6 +18,8 @@ static float Gimbal_Clamp(float val, float max, float min)//云台限幅
 
 uint8_t MOTOR_PID_Gimbal_INIT(MOTOR_Typdef *MOTOR)
 {
+
+    //Yaw轴PID
     float PID_P_Yaw[3] = { 1, 0, 0 };
     float PID_S_Yaw[3] = { 20, 0, 0 };
 
@@ -31,8 +33,10 @@ uint8_t MOTOR_PID_Gimbal_INIT(MOTOR_Typdef *MOTOR)
              PID_S_Yaw, 0, 0, 0, 0, 0,
              Integral_Limit | ErrorHandle);
 
+
+    //pitch轴PID
     float PID_P_Pitch[3] = { 1, 0, 0 };
-    float PID_S_Pitch[3] = { 20,0, 0};
+    float PID_S_Pitch[3] = { 10,0.1, 0};
 
     PID_Init(&MOTOR->DJI_6020_Pitch.PID_P,
              PITCH_MOTOR_MAX_OUT, PITCH_MOTOR_MAX_IOUT,

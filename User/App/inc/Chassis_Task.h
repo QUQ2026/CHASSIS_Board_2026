@@ -15,6 +15,7 @@ static void ApplyGimbalTransform(CONTAL_Typedef *CONTAL,
                                  DBUS_Typedef   *DBUS,
                                  float           gimbal_deg);
 static void OmniResolve(CONTAL_Typedef *CONTAL);
+static void MecanumResolve(CONTAL_Typedef *CONTAL);
 uint8_t Motor_PID_Chassis_Init(MOTOR_Typdef *MOTOR);
 uint8_t Chassis_AIM_INIT(RUI_ROOT_STATUS_Typedef *Root, MOTOR_Typdef *MOTOR);
 uint8_t chassis_task(CONTAL_Typedef *CONTAL,
