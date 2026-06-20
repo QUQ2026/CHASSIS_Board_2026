@@ -7,11 +7,11 @@ float pitch_TD;
 static float counttt=0.0f;
 float VISION_connect;
 
-typedef enum {
-    CHASSIS_MODE_FOLLOW   = 1,  // 底盘跟随云台（陀螺仪）
-    CHASSIS_MODE_NORMAL   = 2,  // 普通模式（拨轮控制旋转）
-    CHASSIS_MODE_GYRO     = 3,  // 小陀螺模式（固定自旋）
-} Chassis_Mode_e;
+// typedef enum {
+//     CHASSIS_MODE_FOLLOW   = 1,  // 底盘跟随云台（陀螺仪）
+//     CHASSIS_MODE_NORMAL   = 2,  // 普通模式（拨轮控制旋转）
+//     CHASSIS_MODE_GYRO     = 3,  // 小陀螺模式（固定自旋）
+// } Chassis_Mode_e;
 
 void RobotTask(uint8_t mode,
                DBUS_Typedef *DBUS,
@@ -29,7 +29,6 @@ void RobotTask(uint8_t mode,
 
         case 1://底盘
         {
-
             if (Root->RM_DBUS == RUI_DF_OFFLINE)
             {
                 CONTAL->BOTTOM.VX    = 0.0f;
@@ -41,59 +40,10 @@ void RobotTask(uint8_t mode,
                 CONTAL->BOTTOM.wheel4 = 0.0f;
                 break;
             }
-
-            //底盘模式选择（S2 拨轮）
-            switch ((Chassis_Mode_e)DBUS->Remote.S2)
-            {
-                case CHASSIS_MODE_FOLLOW:
-                    Chassis_Follow_Gimbal(CONTAL, DBUS, IMU_Data);
-                    break;
-
-                case CHASSIS_MODE_NORMAL:
-                    Chassis_Normal(CONTAL, DBUS, MOTOR);
-                    break;
-
-                case CHASSIS_MODE_GYRO:
-                    Chassis_Gyroscope(CONTAL, DBUS, IMU_Data);
-                    break;
-
-                default:
-                    CONTAL->BOTTOM.VX = 0.0f;
-                    CONTAL->BOTTOM.VY = 0.0f;
-                    CONTAL->BOTTOM.VW = 0.0f;
-                    break;
-            }
+            Chassis_auto_changeMode(CONTAL,IMU_Data,VT13_DBUS);
+        }
 
 
-        } break;
-
-        case 2://云台
-        {
-            switch (DBUS->Remote.S2)
-            {
-                case 1:
-                    //底盘跟随模式：云台目标锁定，底盘 PID 跟随
-                    Gimbal_Set_Target_Follow(CONTAL, DBUS, IMU_Data);
-                    break;
-
-                case 2:
-                    //普通模式：摇杆累加控制云台目标角度
-                    Gimbal_Set_Target_RC(CONTAL, DBUS, IMU_Data);
-                    break;
-
-                case 3:
-                    //小陀螺模式：摇杆控制云台，陀螺仪稳定云台绝对方向不变
-                    Gimbal_Set_Target_RC(CONTAL, DBUS, IMU_Data);
-                    break;
-
-                default:
-
-                    break;
-            }
-            gimbal_task(CONTAL, Root, MOTOR, IMU_Data);
-
-
-        } break;
         case 3://电容
         {
 
@@ -101,7 +51,7 @@ void RobotTask(uint8_t mode,
 
         case 4://发射
         {
-					
+
         } break;
     }
 }

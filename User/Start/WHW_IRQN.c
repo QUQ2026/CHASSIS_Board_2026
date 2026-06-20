@@ -118,7 +118,7 @@ void StartRootTask(void const * argument)
 
     for(;;)
     {
-
+    	//RUI_F_ROOT(root, VT13, MOTOR_Typdef *MOTOR, CAP_RXDATA *CAP_GET)
     	currentTimeRoot += 5;
     	osDelayUntil(currentTimeRoot);
     }

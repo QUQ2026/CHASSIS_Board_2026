@@ -127,9 +127,19 @@ uint8_t gimbal_task(CONTAL_Typedef          *CONTAL,
 }
 
 
-void Gimbal_Set_Target_RC(CONTAL_Typedef *CONTAL,
-                          DBUS_Typedef   *DBUS,
-                          IMU_Data_t     *IMU)
+//VT13版
+void Gimbal_set_target_VT13(CONTAL_Typedef *CONTAL,VT13_Typedef *VT13,IMU_Data_t *IMU) {
+    CONTAL->HEAD.Yaw += VT13->Remote.Channel[3] * (YAW_RC_SPEED / 1024.0f);
+    CONTAL->HEAD.Yaw  = Gimbal_NormalizeAngle(CONTAL->HEAD.Yaw);
+    CONTAL->HEAD.Pitch += VT13->Remote.Channel[2] * (PITCH_RC_SPEED / 1024.0f);
+    CONTAL->HEAD.Pitch  = Gimbal_Clamp(CONTAL->HEAD.Pitch,PITCH_ANGLE_MAX,PITCH_ANGLE_MIN);
+}
+
+
+
+
+
+void Gimbal_Set_Target_RC(CONTAL_Typedef *CONTAL,DBUS_Typedef *DBUS,IMU_Data_t *IMU)
 {
     /* Yaw：左摇杆左右（CH2）累加
      摇杆最大值 660 时，每个周期累加 YAW_RC_SPEED 度

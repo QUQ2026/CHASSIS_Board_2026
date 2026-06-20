@@ -14,6 +14,10 @@ static float Clamp(float val, float limit);
 static void ApplyGimbalTransform(CONTAL_Typedef *CONTAL,
                                  DBUS_Typedef   *DBUS,
                                  float           gimbal_deg);
+
+static void ApplyGimbal_Transform(CONTAL_Typedef *CONTAL,
+                                 VT13_Typedef   *VT13,
+                                 float           gimbal_deg);
 static void OmniResolve(CONTAL_Typedef *CONTAL);
 static void MecanumResolve(CONTAL_Typedef *CONTAL);
 uint8_t Motor_PID_Chassis_Init(MOTOR_Typdef *MOTOR);
@@ -25,7 +29,9 @@ uint8_t chassis_task(CONTAL_Typedef *CONTAL,
                    CAP_RXDATA *CAP_GET,
                    MOTOR_Typdef *MOTOR);
 void Chassis_Normal(CONTAL_Typedef *CONTAL, DBUS_Typedef *DBUS, MOTOR_Typdef *MOTOR);
-void Chassis_Gyroscope(CONTAL_Typedef *CONTAL, DBUS_Typedef *DBUS, IMU_Data_t *IMU);
-void Chassis_Follow_Gimbal(CONTAL_Typedef *CONTAL, DBUS_Typedef *DBUS, IMU_Data_t *IMU);
+void Chassis_gyroscope(CONTAL_Typedef *CONTAL, VT13_Typedef *VT13, IMU_Data_t *IMU);
+void Chassis_Gyroscope(CONTAL_Typedef *CONTAL, VT13_Typedef *VT13, IMU_Data_t *IMU);
+void Chassis_Follow_Gimbal(CONTAL_Typedef *CONTAL, VT13_Typedef *VT13, IMU_Data_t *IMU);
+void Chassis_auto_changeMode(CONTAL_Typedef *CONTAL, IMU_Data_t *IMU,VT13_Typedef *VT13);
 
 #endif
