@@ -36,6 +36,20 @@ static void ApplyGimbalTransform(CONTAL_Typedef *CONTAL,
     CONTAL->BOTTOM.VY =  vx_rc * sinf(angle_rad) + vy_rc * cosf(angle_rad);
 }
 
+//VT13遥控
+static void ApplyGimbal_Transform(CONTAL_Typedef *CONTAL,
+                                 VT13_Typedef   *VT13,
+                                 float           gimbal_deg) {
+    // 前馈：预测下一周期底盘转到哪
+    float angle_rad = gimbal_deg*(3.14159265f/180.0f) + CONTAL->BOTTOM.VW * CHASSIS_LOOP_TIME;
+
+    float vx_rc = VT13->Remote.Channel[1] * (VX_MAX / 1024.0);  // 遥控 → m/s
+    float vy_rc = VT13->Remote.Channel[0] * (VY_MAX / 1024.0);
+
+    //旋转矩阵：将遥控输入旋转到底盘系
+    CONTAL->BOTTOM.VX =  vx_rc * cosf(angle_rad) - vy_rc * sinf(angle_rad);
+    CONTAL->BOTTOM.VY =  vx_rc * sinf(angle_rad) + vy_rc * cosf(angle_rad);
+}
 
 static void OmniResolve(CONTAL_Typedef *CONTAL)//全向底盘
 {
