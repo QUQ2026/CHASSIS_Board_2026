@@ -65,7 +65,7 @@ extern uint8_t sd_v_buff[24];
 //extern uint8_t sd_v_buff[20];
 
 extern uint8_t VisionRx[30];
-extern VT13_Typedef VT13;
+
 
 extern CAPDATE_TYPDEF CAPDATE;
 

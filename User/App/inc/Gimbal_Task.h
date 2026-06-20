@@ -8,6 +8,7 @@
 #include "Motors.h"
 #include "IMU_Task.h"
 #include "All_Init.h"
+#include "VT13.h"
 #include "WHW_IRQN.h"
 #include "controller.h"
 static float Gimbal_Clamp(float val, float max, float min);
