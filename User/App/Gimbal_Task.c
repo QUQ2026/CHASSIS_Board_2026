@@ -137,44 +137,44 @@ void Gimbal_set_target_VT13(CONTAL_Typedef *CONTAL,VT13_Typedef *VT13,IMU_Data_t
 
 
 
-
-
-void Gimbal_Set_Target_RC(CONTAL_Typedef *CONTAL,DBUS_Typedef *DBUS,IMU_Data_t *IMU)
-{
-    /* Yaw：左摇杆左右（CH2）累加
-     摇杆最大值 660 时，每个周期累加 YAW_RC_SPEED 度
-      实际转速 = YAW_RC_SPEED * (CH2/660) * 任务频率(Hz) */
-    CONTAL->HEAD.Yaw += DBUS->Remote.CH2 * (YAW_RC_SPEED / REMOTE_SCALE);
-
-    CONTAL->HEAD.Pitch += DBUS->Remote.CH1 * (PITCH_RC_SPEED / REMOTE_SCALE);
-
-    CONTAL->HEAD.Yaw = Gimbal_NormalizeAngle(CONTAL->HEAD.Yaw);
-    // Pitch 限位
-    CONTAL->HEAD.Pitch = Gimbal_Clamp(CONTAL->HEAD.Pitch,
-                                      PITCH_ANGLE_MAX,
-                                      PITCH_ANGLE_MIN);
-}
-
-
- /*模式3：底盘跟随云台
-Yaw 目标锁定为 0（正前方），Pitch 由摇杆控制
-   此时底盘会用 PID 去追 CONTAL->CG.RELATIVE_ANGLE=0，
-   即让云台相对底盘的偏角为零， 底盘跟上云台*/
-
-void Gimbal_Set_Target_Follow(CONTAL_Typedef *CONTAL,
-                               DBUS_Typedef   *DBUS,
-                               IMU_Data_t     *IMU)
-{
-    /* Yaw：保持当前 IMU 方向不变（云台锁住，底盘来跟）
-      实际上目标就是当前 yaw，不累加 */
-    /* 如果需要摇杆微调方向，取消下面注释：
-      CONTAL->HEAD.Yaw += DBUS->Remote.CH2 * (YAW_RC_SPEED / REMOTE_SCALE);
-     *CONTAL->HEAD.Yaw = Gimbal_NormalizeAngle(CONTAL->HEAD.Yaw);
-     */
-
-    //Pitch：摇杆累加
-    CONTAL->HEAD.Pitch += DBUS->Remote.CH1 * (PITCH_RC_SPEED / REMOTE_SCALE);
-    CONTAL->HEAD.Pitch  = Gimbal_Clamp(CONTAL->HEAD.Pitch,
-                                       PITCH_ANGLE_MAX,
-                                       PITCH_ANGLE_MIN);
-}
+//
+//
+// void Gimbal_Set_Target_RC(CONTAL_Typedef *CONTAL,DBUS_Typedef *DBUS,IMU_Data_t *IMU)
+// {
+//     /* Yaw：左摇杆左右（CH2）累加
+//      摇杆最大值 660 时，每个周期累加 YAW_RC_SPEED 度
+//       实际转速 = YAW_RC_SPEED * (CH2/660) * 任务频率(Hz) */
+//     CONTAL->HEAD.Yaw += DBUS->Remote.CH2 * (YAW_RC_SPEED / REMOTE_SCALE);
+//
+//     CONTAL->HEAD.Pitch += DBUS->Remote.CH1 * (PITCH_RC_SPEED / REMOTE_SCALE);
+//
+//     CONTAL->HEAD.Yaw = Gimbal_NormalizeAngle(CONTAL->HEAD.Yaw);
+//     // Pitch 限位
+//     CONTAL->HEAD.Pitch = Gimbal_Clamp(CONTAL->HEAD.Pitch,
+//                                       PITCH_ANGLE_MAX,
+//                                       PITCH_ANGLE_MIN);
+// }
+//
+//
+//  /*模式3：底盘跟随云台
+// Yaw 目标锁定为 0（正前方），Pitch 由摇杆控制
+//    此时底盘会用 PID 去追 CONTAL->CG.RELATIVE_ANGLE=0，
+//    即让云台相对底盘的偏角为零， 底盘跟上云台*/
+//
+// void Gimbal_Set_Target_Follow(CONTAL_Typedef *CONTAL,
+//                                DBUS_Typedef   *DBUS,
+//                                IMU_Data_t     *IMU)
+// {
+//     /* Yaw：保持当前 IMU 方向不变（云台锁住，底盘来跟）
+//       实际上目标就是当前 yaw，不累加 */
+//     /* 如果需要摇杆微调方向，取消下面注释：
+//       CONTAL->HEAD.Yaw += DBUS->Remote.CH2 * (YAW_RC_SPEED / REMOTE_SCALE);
+//      *CONTAL->HEAD.Yaw = Gimbal_NormalizeAngle(CONTAL->HEAD.Yaw);
+//      */
+//
+//     //Pitch：摇杆累加
+//     CONTAL->HEAD.Pitch += DBUS->Remote.CH1 * (PITCH_RC_SPEED / REMOTE_SCALE);
+//     CONTAL->HEAD.Pitch  = Gimbal_Clamp(CONTAL->HEAD.Pitch,
+//                                        PITCH_ANGLE_MAX,
+//                                        PITCH_ANGLE_MIN);
+// }

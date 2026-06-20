@@ -118,7 +118,7 @@ void StartRootTask(void const * argument)
 
     for(;;)
     {
-    	//RUI_F_ROOT(root, VT13, MOTOR_Typdef *MOTOR, CAP_RXDATA *CAP_GET)
+    	RUI_F_ROOT(&RUI_ROOT_STATUS, &VT13, &ALL_MOTOR, &CAPDATE.GET);//Root_RMDBUS的赋值来源
     	currentTimeRoot += 5;
     	osDelayUntil(currentTimeRoot);
     }
