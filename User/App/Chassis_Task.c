@@ -255,5 +255,13 @@ void Chassis_Follow_Gimbal(CONTAL_Typedef *CONTAL, DBUS_Typedef *DBUS, IMU_Data_
     MecanumResolve(CONTAL);
 }
 
+void Chassis_auto_changeMode(CONTAL_Typedef *CONTAL, IMU_Data_t *IMU,VT13_Typedef *VT13) {
+    if (VT13->Remote.wheel > 50 || VT13->Remote.wheel < -50)//当拨轮在这个范围动时，不开启小陀螺，可能是误碰
+    {
+        Chassis_Gyroscope(CONTAL, VT13, IMU);
+    }
+    else{
+        Chassis_Follow_Gimbal(CONTAL, VT13, IMU);
+    }
 
 
