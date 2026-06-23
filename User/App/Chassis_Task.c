@@ -257,6 +257,18 @@ void Chassis_Follow_Gimbal(CONTAL_Typedef *CONTAL, VT13_Typedef *VT13, IMU_Data_
     ApplyGimbal_Transform(CONTAL, *VT13, gimbal_deg);
    // OmniResolve(CONTAL);
     MecanumResolve(CONTAL);
+}*/
+
+void Chassis_follow_Gimbal(CONTAL_Typedef *CONTAL, DBUS_Typedef *DBUS, IMU_Data_t *IMU) {
+    float angle_err = (float)CONTAL->CG.RELATIVE_ANGLE * 360.0f / 8192.0f;
+    angle_err = NormalizeAngle(angle_err);
+    float vw = FOLLOW_KP * angle_err + FOLLOW_KD * (angle_err - s_last_angle_err);
+    s_last_angle_err = angle_err;
+    CONTAL->BOTTOM.VW = Clamp(vw, VW_MAX);
+    // 坐标转换：IMU->yaw = 云台绝对角度
+    float gimbal_deg = NormalizeAngle(IMU->yaw);
+    ApplyGimbalTransform(CONTAL, *DBUS, gimbal_deg);
+    MecanumResolve(CONTAL);
 }
 
 void Chassis_auto_changeMode(CONTAL_Typedef *CONTAL, IMU_Data_t *IMU,VT13_Typedef *VT13) {
