@@ -18,6 +18,7 @@
 /* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __STM32F4xx_HAL_CORTEX_H
 #define __STM32F4xx_HAL_CORTEX_H
+#include "stm32f407xx.h"
 
 #ifdef __cplusplus
  extern "C" {
