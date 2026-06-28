@@ -161,6 +161,9 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef* hcan)
 			case GIMBAL_kong:
 			ChassisRXResolve(rx_data,&DBUS,&RUI_ROOT_STATUS);
 				break;
+			case GIMBAL_kong + 1:  // 或专门定义的 GIMBAL_YAW_kong
+				ChassisRXResolve_Yaw(rx_data, &RUI_V_CONTAL);
+				break;
 			default:
 				break;
         }
@@ -182,6 +185,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef* hcan)
 				break;
 			case 0x204:
 				MOTOR_CAN_RX_2006RM(&ALL_MOTOR.DJI_3508_Chassis_4.DATA, rx_data);
+				break;
 			default:
 				break;
         }

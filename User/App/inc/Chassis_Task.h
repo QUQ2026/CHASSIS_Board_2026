@@ -10,7 +10,12 @@
 #include "Power_Ctrl.h"
 #include "All_Init.h"
 #include "VT13.h"
+typedef union {
+    float    yaw_abs;       // 云台绝对yaw角度（度，来自 IMU->YawTotalAngle）
+    uint8_t  data[4];       // CAN发送用
+} YawFrame_t;
 
+extern YawFrame_t YawFrame;
 union gmTOch_typdef		//ʹ�ù�������������
 {
     struct {
@@ -98,4 +103,5 @@ void Chassis_auto_changeMode(CONTAL_Typedef *CONTAL, IMU_Data_t *IMU,VT13_Typede
 void Chassis_Auto_changeMode(CONTAL_Typedef *CONTAL, IMU_Data_t *IMU,DBUS_Typedef *DBUS);
 uint8_t ChassisTXResolve(User_Data_T *User_data);
 uint8_t ChassisRXResolve(uint8_t * data,DBUS_Typedef *DBUS,RUI_ROOT_STATUS_Typedef *Root);
+uint8_t ChassisRXResolve_Yaw(uint8_t *data, CONTAL_Typedef *CONTAL);
 #endif
