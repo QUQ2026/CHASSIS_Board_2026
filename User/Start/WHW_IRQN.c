@@ -158,6 +158,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef* hcan)
 		//CAN1
 		switch (can_rx.StdId)
 		{
+			case GIMBAL_kong:
 			ChassisRXResolve(rx_data,&DBUS,&RUI_ROOT_STATUS);
 				break;
 			default:
