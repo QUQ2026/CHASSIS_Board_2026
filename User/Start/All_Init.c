@@ -1,5 +1,7 @@
 #include "All_Init.h"
 
+#include <stdint.h>
+
 //总控制结构体
 CONTAL_Typedef RUI_V_CONTAL = { 0 };
 
