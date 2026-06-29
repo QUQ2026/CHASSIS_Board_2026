@@ -63,7 +63,7 @@ void StartMoveTask(void const * argument)
 
     	currentTimeMove += 1;
     	osDelayUntil(currentTimeMove);
-    //	vTaskDelay (1);
+    	vTaskDelay (1);
     }
 }
 
