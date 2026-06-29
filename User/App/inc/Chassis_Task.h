@@ -82,9 +82,7 @@ struct CanCommunit_typedef
 static float NormalizeAngle(float angle);
 static float Clamp(float val, float limit);
 
-static void ApplyGimbalTransform(CONTAL_Typedef *CONTAL,
-                                 DBUS_Typedef   *DBUS,
-                                 float           gimbal_deg);
+static void Apply_GimbalTransform(CONTAL_Typedef *CONTAL, DBUS_Typedef *DBUS,float gimbal_deg);
 
 static void ApplyGimbal_Transform(CONTAL_Typedef *CONTAL,
                                  VT13_Typedef VT13,

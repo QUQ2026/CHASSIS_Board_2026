@@ -22,13 +22,13 @@ static float Clamp(float val, float limit)//限幅
 }
 
 //DBUS遥控写法
-static void Apply_GimbalTransform(CONTAL_Typedef *CONTAL, float gimbal_deg)
+static void Apply_GimbalTransform(CONTAL_Typedef *CONTAL, DBUS_Typedef *DBUS,float gimbal_deg)
 {
     float angle_rad = gimbal_deg * (3.14159265f / 180.0f)+ CONTAL->BOTTOM.VW * CHASSIS_LOOP_TIME;
 
     /* vx/vy 已经由云台板通过双板通信填入 CONTAL->BOTTOM */
-    float vx_rc = DBUS.Remote.CH1 * (VX_MAX / 660.0);  // 云台板发来的原始摇杆vx
-    float vy_rc = DBUS.Remote.CH0 * (VY_MAX / 660.0);  // 云台板发来的原始摇杆vy
+    float vx_rc = DBUS->Remote.CH1 * (VX_MAX / 660.0);  // 云台板发来的原始摇杆vx
+    float vy_rc = DBUS->Remote.CH0 * (VY_MAX / 660.0);  // 云台板发来的原始摇杆vy
 
     CONTAL->BOTTOM.VX = vx_rc * cosf(angle_rad) - vy_rc * sinf(angle_rad);
     CONTAL->BOTTOM.VY = vx_rc * sinf(angle_rad) + vy_rc * cosf(angle_rad);
@@ -236,7 +236,7 @@ void Chassis_gyroscope_VT13(CONTAL_Typedef *CONTAL, VT13_Typedef *VT13, IMU_Data
 void Chassis_Gyroscope_DBUS(CONTAL_Typedef *CONTAL, DBUS_Typedef *DBUS, IMU_Data_t *IMU) {
     CONTAL->BOTTOM.VW =(float)DBUS->Remote.Dial *(VW_MAX/660.0f);// 使用陀螺仪 yaw（不修改原始值，局部变量归一化）
     float gimbal_deg =NormalizeAngle(IMU->yaw);
-    ApplyGimbalTransform(CONTAL, DBUS, gimbal_deg);
+    Apply_GimbalTransform(CONTAL, DBUS, gimbal_deg);
     MecanumResolve(CONTAL);
 }
 
@@ -267,7 +267,7 @@ void Chassis_follow_Gimbal(CONTAL_Typedef *CONTAL, DBUS_Typedef *DBUS, IMU_Data_
     CONTAL->BOTTOM.VW = Clamp(vw, VW_MAX);
     // 坐标转换：IMU->yaw = 云台绝对角度
     float gimbal_deg = NormalizeAngle(IMU->yaw);
-    ApplyGimbalTransform(CONTAL, DBUS, gimbal_deg);
+    Apply_GimbalTransform(CONTAL, DBUS, gimbal_deg);
     MecanumResolve(CONTAL);
 }
 
@@ -303,7 +303,6 @@ uint8_t ChassisRXResolve(uint8_t                 *data,
     for (int i = 0; i < 8; i++)
         CanCommunit_t.gmTOch.getData[i] = data[i];
 
-    /* 解析到 DBUS，底盘板直接用 DBUS 字段做运动控制 */
     DBUS->Remote.CH1  = CanCommunit_t.gmTOch.dataNeaten.vx;  // 前后
     DBUS->Remote.CH0 = CanCommunit_t.gmTOch.dataNeaten.vy;  // 左右
     DBUS->Remote.Dial= CanCommunit_t.gmTOch.dataNeaten.vr;  // 拨轮
