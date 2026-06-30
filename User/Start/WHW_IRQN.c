@@ -24,42 +24,13 @@ void StartMoveTask(void const * argument)
 
     for (;;)
     {
-    	/*RobotTask(2,
-				  &DBUS,
-				  &RUI_V_CONTAL,
-				  &User_data,
-				  &CAPDATE,
-				  &VISION_V_DATA,
-				  &RUI_ROOT_STATUS,
-				  &ALL_MOTOR,
-				  &IMU_Data,
-				  &TDDDD ,
-				  &VT13);*/
+    	//RobotTask(2, &DBUS, &RUI_V_CONTAL,&User_data,&CAPDATE,&VISION_V_DATA,&RUI_ROOT_STATUS,&ALL_MOTOR,&IMU_Data, &TDDDD ,&VT13);
 
-    	RobotTask(1,
-				  &DBUS,
-				  &RUI_V_CONTAL,
-				  &User_data,
-				  &CAPDATE,
-				  &VISION_V_DATA,
-				  &RUI_ROOT_STATUS,
-				  &ALL_MOTOR,
-				  &IMU_Data,
-				  &TDDDD,
-				  &VT13);
-
-    	// gimbal_task(&RUI_V_CONTAL,
-					// &RUI_ROOT_STATUS,
-					// &ALL_MOTOR,
-					// &IMU_Data);
+    	RobotTask(1,&DBUS,&RUI_V_CONTAL,&User_data,&CAPDATE,&VISION_V_DATA,&RUI_ROOT_STATUS,&ALL_MOTOR,&IMU_Data,&TDDDD,&VT13);
+    	// gimbal_task(&RUI_V_CONTAL,&RUI_ROOT_STATUS,&ALL_MOTOR,&IMU_Data);
 
     	// 底盘速度PID + 功率控制 + CAN发送
-    	chassis_task(&RUI_V_CONTAL,
-					 &RUI_ROOT_STATUS,
-					 &User_data,
-					 &model,
-					 &CAPDATE.GET,
-					 &ALL_MOTOR);
+    	chassis_task(&RUI_V_CONTAL,&RUI_ROOT_STATUS,&User_data,&model,&CAPDATE.GET,&ALL_MOTOR);
 
     	currentTimeMove += 1;
     	osDelayUntil(currentTimeMove);
@@ -159,9 +130,9 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef* hcan)
 		switch (can_rx.StdId)
 		{
 			case GIMBAL_kong:
-			ChassisRXResolve(rx_data,&DBUS,&RUI_ROOT_STATUS);
+				ChassisRXResolve(rx_data,&DBUS,&RUI_ROOT_STATUS);
 				break;
-			case GIMBAL_kong + 1:  // 或专门定义的 GIMBAL_YAW_kong
+			case GIMBAL_kong_YAW:
 				ChassisRXResolve_Yaw(rx_data, &RUI_V_CONTAL);
 				break;
 			default:

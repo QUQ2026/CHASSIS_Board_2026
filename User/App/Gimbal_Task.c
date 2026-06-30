@@ -22,22 +22,14 @@ uint8_t MOTOR_PID_Gimbal_INIT(MOTOR_Typdef *MOTOR)
     float PID_S_Yaw[3] = { 15.0f,  0.0f,     0.0f };
     float PID_P_Yaw[3] = { 15.0f,  0.00001f, 0.0f };
 
-    PID_Init(&MOTOR->m_dm4310_y_t.PID_S, 10000.0f, 0.0f,
-             PID_S_Yaw, 0.0f, 0.0f, 0.0f, 0.0f, 0,
-             Integral_Limit);
-    PID_Init(&MOTOR->m_dm4310_y_t.PID_P, 2000.0f, 50.0f,
-             PID_P_Yaw, 0.0f, 0.0f, 0.0f, 0.0f, 0,
-             Integral_Limit);
+    PID_Init(&MOTOR->m_dm4310_y_t.PID_S, 10000.0f, 0.0f,PID_S_Yaw, 0.0f, 0.0f, 0.0f, 0.0f, 0,Integral_Limit);
+    PID_Init(&MOTOR->m_dm4310_y_t.PID_P, 2000.0f, 50.0f,PID_P_Yaw, 0.0f, 0.0f, 0.0f, 0.0f, 0,Integral_Limit);
 
     float PID_S_Pitch[3] = { 15.0f, 0.0f, 0.0f };
     float PID_P_Pitch[3] = { 15.0f, 0.0f, 0.0f };
 
-    PID_Init(&MOTOR->m_dm4310_p_t.PID_S, 10000.0f, 0.0f,
-             PID_S_Pitch, 0.0f, 0.0f, 0.0f, 0.0f, 0,
-             Integral_Limit);
-    PID_Init(&MOTOR->m_dm4310_p_t.PID_P, 1000.0f, 50.0f,
-             PID_P_Pitch, 0.0f, 0.0f, 0.0f, 0.0f, 0,
-             Integral_Limit);
+    PID_Init(&MOTOR->m_dm4310_p_t.PID_S, 10000.0f, 0.0f,PID_S_Pitch, 0.0f, 0.0f, 0.0f, 0.0f, 0,Integral_Limit);
+    PID_Init(&MOTOR->m_dm4310_p_t.PID_P, 1000.0f, 50.0f,PID_P_Pitch, 0.0f, 0.0f, 0.0f, 0.0f, 0,Integral_Limit);
 
     return RUI_DF_READY;
 }
@@ -45,11 +37,11 @@ uint8_t MOTOR_PID_Gimbal_INIT(MOTOR_Typdef *MOTOR)
 
 uint8_t Gimbal_AIM_INIT(CONTAL_Typedef *CONTAL)
 {
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < 10; i++)//确保使能
     {
-        motor_mode(&hcan1, YAW_CAN_ID,   0, DM_CMD_MOTOR_MODE);  // 0xFC 使能Yaw
+        motor_mode(&hcan1, YAW_CAN_ID,0, DM_CMD_MOTOR_MODE);  // 0xFC 使能Yaw
         osDelay(1);
-        motor_mode(&hcan1, PITCH_CAN_ID, 0, DM_CMD_MOTOR_MODE);  // 0xFC 使能Pitch
+        motor_mode(&hcan1, PITCH_CAN_ID,0, DM_CMD_MOTOR_MODE);  // 0xFC 使能Pitch
         osDelay(1);
     }
     //Pitch 软限位（防止撞车身）,根据实际机械结构调整
@@ -69,18 +61,12 @@ void Gimbal_set_target_VT13(CONTAL_Typedef *CONTAL,VT13_Typedef *VT13,IMU_Data_t
     CONTAL->HEAD.Pitch  = Gimbal_Clamp(CONTAL->HEAD.Pitch,PITCH_ANGLE_MAX,PITCH_ANGLE_MIN);
 }
 
-void Gimbal_Set_target_DBUS(CONTAL_Typedef *CONTAL,DBUS_Typedef *DBUS,IMU_Data_t *IMU) {
-    CONTAL->HEAD.Yaw+=DBUS->Remote.CH3*(YAW_RC_SPEED / 660.0f);
-    CONTAL->HEAD.Yaw  = Gimbal_NormalizeAngle(CONTAL->HEAD.Yaw);
-    CONTAL->HEAD.Pitch += DBUS->Remote.CH2 * (PITCH_RC_SPEED / 660.0f);
-    CONTAL->HEAD.Pitch  = Gimbal_Clamp(CONTAL->HEAD.Pitch,PITCH_ANGLE_MAX,PITCH_ANGLE_MIN);
-}
-
-void Gimbal_Set_Target_RC(CONTAL_Typedef *CONTAL,DBUS_Typedef *DBUS, IMU_Data_t *IMU)
+//DBUS版
+void Gimbal_Set_Target_DBUS(CONTAL_Typedef *CONTAL,DBUS_Typedef *DBUS, IMU_Data_t *IMU)
 {
     //Yaw：直接累加，不归一化，保持和 YawTotalAngle 同一坐标系 ,以下累加的符号可能反了
-    CONTAL->HEAD.Yaw -= (float)DBUS->Remote.CH3 * (YAW_RC_SPEED / 660.0f);
-    CONTAL->HEAD.Pitch -= (float)DBUS->Remote.CH2 * (PITCH_RC_SPEED / 660.0f);
+    CONTAL->HEAD.Yaw += (float)DBUS->Remote.CH3 * (YAW_RC_SPEED / 660.0f);
+    CONTAL->HEAD.Pitch += (float)DBUS->Remote.CH2 * (PITCH_RC_SPEED / 660.0f);
     CONTAL->HEAD.Pitch  = Gimbal_Clamp(CONTAL->HEAD.Pitch,CONTAL->HEAD.Pitch_MAX,CONTAL->HEAD.Pitch_MIN);
 
 }
@@ -102,12 +88,11 @@ uint8_t gimbal_task(CONTAL_Typedef *CONTAL,RUI_ROOT_STATUS_Typedef *Root,MOTOR_T
         return RUI_DF_ERROR;
     }
 
-   //VT13   的离线检测
-    // if (Root->RM_DBUS == RUI_DF_OFFLINE)
-    // {
-    //     CONTAL->HEAD.Yaw   = IMU->YawTotalAngle;
-    //     CONTAL->HEAD.Pitch = IMU->pitch;
-    // }
+    if (Root->RM_DBUS == RUI_DF_OFFLINE)
+    {
+         CONTAL->HEAD.Yaw   = IMU->YawTotalAngle;
+        CONTAL->HEAD.Pitch = IMU->pitch;
+     }
 
     CONTAL->HEAD.Pitch = Gimbal_Clamp(CONTAL->HEAD.Pitch,CONTAL->HEAD.Pitch_MAX,CONTAL->HEAD.Pitch_MIN);
    //数据给底盘跟随

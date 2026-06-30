@@ -36,9 +36,8 @@ static void Apply_GimbalTransform(CONTAL_Typedef *CONTAL, DBUS_Typedef *DBUS,flo
 
 /*
 //VT13遥控
-static void ApplyGimbal_Transform(CONTAL_Typedef *CONTAL,
-                                 VT13_Typedef VT13,
-                                 float  gimbal_deg) {
+static void ApplyGimbal_Transform(CONTAL_Typedef *CONTAL,VT13_Typedef VT13,float  gimbal_deg)
+{
     // 前馈：预测下一周期底盘转到哪
     float angle_rad = gimbal_deg*(3.14159265f/180.0f) + CONTAL->BOTTOM.VW * CHASSIS_LOOP_TIME;
 
@@ -75,20 +74,20 @@ static void MecanumResolve(CONTAL_Typedef *CONTAL)//麦轮底盘
 }
 
 
-/*
+
 static void SteeringResolve(CONTAL_Typedef *CONTAL)//舵轮底盘
 {
     float vx = CONTAL->BOTTOM.VX;
     float vy = CONTAL->BOTTOM.VY;
     float vw = CONTAL->BOTTOM.VW * 0.25f;   //旋转半径系数，需实车标定
 
-    CONTAL->BOTTOM.wheel1 = =sqrt(pow(vx-sqrt(2)/2*vw,2)+pow(vy-sqrt(2)/2*vw ,2))* OMNI_RATIO;  // Chassis_3
+    CONTAL->BOTTOM.wheel1 =sqrt(pow(vx-sqrt(2)/2*vw,2)+pow(vy-sqrt(2)/2*vw ,2))* OMNI_RATIO;  // Chassis_3
     CONTAL->BOTTOM.wheel2 = sqrt(pow(vx+sqrt(2)/2*vw,2)+pow(vy-sqrt(2)/2*vw ,2))* OMNI_RATIO;  // Chassis_4
     CONTAL->BOTTOM.wheel3 = sqrt(pow(vx-sqrt(2)/2*vw,2)+pow(vy+sqrt(2)/2*vw ,2)) * OMNI_RATIO;  // Chassis_1
     CONTAL->BOTTOM.wheel4 = sqrt(pow(vx+sqrt(2)/2*vw,2)+pow(vy+sqrt(2)/2*vw ,2))* OMNI_RATIO;  // Chassis_2
 }
 
-*/
+
 uint8_t Motor_PID_Chassis_Init(MOTOR_Typdef *MOTOR)
 {
 
@@ -141,12 +140,8 @@ uint8_t Chassis_AIM_INIT(RUI_ROOT_STATUS_Typedef *Root, MOTOR_Typdef *MOTOR)//�
     return RUI_DF_READY;
 }
 
-uint8_t chassis_task(CONTAL_Typedef *CONTAL,
-                   RUI_ROOT_STATUS_Typedef *Root,
-                   User_Data_T *User_data,
-                   model_t *model,
-                   CAP_RXDATA *CAP_GET,
-                   MOTOR_Typdef *MOTOR) {
+uint8_t chassis_task(CONTAL_Typedef *CONTAL,RUI_ROOT_STATUS_Typedef *Root,User_Data_T *User_data,model_t *model,CAP_RXDATA *CAP_GET,MOTOR_Typdef *MOTOR)
+{
     static uint8_t PID_INIT = RUI_DF_ERROR;
     static uint8_t AIM_INIT = RUI_DF_ERROR;
 
@@ -170,24 +165,12 @@ uint8_t chassis_task(CONTAL_Typedef *CONTAL,
     MOTOR->DJI_3508_Chassis_1.DATA.Aim = CONTAL->BOTTOM.wheel3*4.0f;
     MOTOR->DJI_3508_Chassis_2.DATA.Aim = CONTAL->BOTTOM.wheel4*4.0f;
 
-    PID_Calculate(&MOTOR->DJI_3508_Chassis_1.PID_S,
-                     (float)MOTOR->DJI_3508_Chassis_1.DATA.Speed_now,
-                     MOTOR->DJI_3508_Chassis_1.DATA.Aim);
-    PID_Calculate(&MOTOR->DJI_3508_Chassis_2.PID_S,
-                 (float)MOTOR->DJI_3508_Chassis_2.DATA.Speed_now,
-                 MOTOR->DJI_3508_Chassis_2.DATA.Aim);
-    PID_Calculate(&MOTOR->DJI_3508_Chassis_3.PID_S,
-                 (float)MOTOR->DJI_3508_Chassis_3.DATA.Speed_now,
-                 MOTOR->DJI_3508_Chassis_3.DATA.Aim);
-    PID_Calculate(&MOTOR->DJI_3508_Chassis_4.PID_S,
-                 (float)MOTOR->DJI_3508_Chassis_4.DATA.Speed_now,
-                 MOTOR->DJI_3508_Chassis_4.DATA.Aim);
+    PID_Calculate(&MOTOR->DJI_3508_Chassis_1.PID_S,(float)MOTOR->DJI_3508_Chassis_1.DATA.Speed_now,MOTOR->DJI_3508_Chassis_1.DATA.Aim);
+    PID_Calculate(&MOTOR->DJI_3508_Chassis_2.PID_S,(float)MOTOR->DJI_3508_Chassis_2.DATA.Speed_now,MOTOR->DJI_3508_Chassis_2.DATA.Aim);
+    PID_Calculate(&MOTOR->DJI_3508_Chassis_3.PID_S,(float)MOTOR->DJI_3508_Chassis_3.DATA.Speed_now,MOTOR->DJI_3508_Chassis_3.DATA.Aim);
+    PID_Calculate(&MOTOR->DJI_3508_Chassis_4.PID_S,(float)MOTOR->DJI_3508_Chassis_4.DATA.Speed_now,MOTOR->DJI_3508_Chassis_4.DATA.Aim);
    //功率控制
-    chassis_power_control(CONTAL,
-                             User_data,
-                             model,
-                             CAP_GET,
-                             MOTOR);
+    chassis_power_control(CONTAL,User_data,model,CAP_GET,MOTOR);
 
     float Out_put[4];
     Out_put[0] = MOTOR->DJI_3508_Chassis_1.PID_S.Output;//可在前面加一个前馈
@@ -199,12 +182,7 @@ uint8_t chassis_task(CONTAL_Typedef *CONTAL,
     Out_put[3] = MOTOR->DJI_3508_Chassis_4.PID_S.Output;
 
     //CAN发送
-    DJI_Current_Ctrl(&hcan1,
-                     0x200,
-                     (int16_t)Out_put[0],
-                     (int16_t)Out_put[1],
-                     (int16_t)Out_put[2],
-                     (int16_t)Out_put[3]
+    DJI_Current_Ctrl(&hcan1,0x200,(int16_t)Out_put[0],(int16_t)Out_put[1],(int16_t)Out_put[2],(int16_t)Out_put[3]
                                             );
     return RUI_DF_READY;
 }
@@ -258,8 +236,8 @@ void Chassis_Follow_Gimbal(CONTAL_Typedef *CONTAL, VT13_Typedef *VT13, IMU_Data_
    // OmniResolve(CONTAL);
     MecanumResolve(CONTAL);
 }*/
-
-void Chassis_follow_Gimbal(CONTAL_Typedef *CONTAL, DBUS_Typedef *DBUS, IMU_Data_t *IMU) {
+void Chassis_follow_Gimbal(CONTAL_Typedef *CONTAL, DBUS_Typedef *DBUS, IMU_Data_t *IMU)
+{
     float angle_err = (float)CONTAL->CG.RELATIVE_ANGLE * 360.0f / 8192.0f;
     angle_err = NormalizeAngle(angle_err);
     float vw = FOLLOW_KP * angle_err + FOLLOW_KD * (angle_err - s_last_angle_err);
@@ -274,7 +252,7 @@ void Chassis_follow_Gimbal(CONTAL_Typedef *CONTAL, DBUS_Typedef *DBUS, IMU_Data_
 
 
 //VT13
-void Chassis_auto_changeMode(CONTAL_Typedef *CONTAL, IMU_Data_t *IMU,VT13_Typedef *VT13) {
+void Chassis_Auto_changeMode_VT13(CONTAL_Typedef *CONTAL, IMU_Data_t *IMU,VT13_Typedef *VT13) {
     if (VT13->Remote.wheel > 50 || VT13->Remote.wheel < -50)//当拨轮在这个范围动时，不开启小陀螺，可能是误碰
     {
         Chassis_gyroscope_VT13(CONTAL, VT13, IMU);
@@ -285,8 +263,7 @@ void Chassis_auto_changeMode(CONTAL_Typedef *CONTAL, IMU_Data_t *IMU,VT13_Typede
 
 }
 //DBUS
-
-void Chassis_Auto_changeMode(CONTAL_Typedef *CONTAL, IMU_Data_t *IMU,DBUS_Typedef *DBUS) {
+void Chassis_Auto_changeMode_DBUS(CONTAL_Typedef *CONTAL, IMU_Data_t *IMU,DBUS_Typedef *DBUS) {
     if (DBUS->Remote.Dial > 50 || DBUS->Remote.Dial< -50)//当拨轮在这个范围动时，不开启小陀螺，可能是误碰
     {
         Chassis_Gyroscope_DBUS(CONTAL, DBUS, IMU);
@@ -294,11 +271,9 @@ void Chassis_Auto_changeMode(CONTAL_Typedef *CONTAL, IMU_Data_t *IMU,DBUS_Typede
     else{
         Chassis_follow_Gimbal(CONTAL, DBUS, IMU);
     }
-
 }
-uint8_t ChassisRXResolve(uint8_t                 *data,
-                          DBUS_Typedef            *DBUS,
-                          RUI_ROOT_STATUS_Typedef *Root)
+
+uint8_t ChassisRXResolve(uint8_t *data,DBUS_Typedef *DBUS,RUI_ROOT_STATUS_Typedef *Root)
 {
     for (int i = 0; i < 8; i++)
         CanCommunit_t.gmTOch.getData[i] = data[i];
@@ -327,7 +302,7 @@ uint8_t ChassisRXResolve(uint8_t                 *data,
 
 uint8_t ChassisRXResolve_Yaw(uint8_t *data, CONTAL_Typedef *CONTAL)
 {
-    /* 4字节还原成 float */
+    //4字节还原成 float
     YawFrame.data[0] = data[0];
     YawFrame.data[1] = data[1];
     YawFrame.data[2] = data[2];
