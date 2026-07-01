@@ -158,29 +158,27 @@
 #define VY_MAX 1
 #define CHASSIS_LOOP_TIME   0.001f    // 底盘任务周期
 #define REMOTE_SCALE        660.0f    // 遥控摇杆最大值
-/* 小陀螺固定转速 rad/s */
+// 小陀螺固定转速 rad/s
 #define GYROSCOPE_W           3.0f
-/* 底盘跟随 PID 参数（需实测调整） */
+//底盘跟随 PID 参数（需实测调整）
 #define FOLLOW_KP             0.8f
 #define FOLLOW_KI             0.0f
 #define FOLLOW_KD             0.1f
 
 //Gimbal_task
-/* ============ Yaw 轴参数 ============ */
 #define YAW_MOTOR_MAX_OUT       30000.0f    // 电机最大电流输出
 #define YAW_MOTOR_MAX_IOUT      2000.0f     // 积分限幅
 
-/* 外环（位置环）PID —— 输入：角度误差(度)，输出：目标角速度(rpm) */
+//外环（位置环）PID —— 输入：角度误差(度)，输出：目标角速度(rpm)
 #define YAW_KP_P                1.0f
 #define YAW_KI_P                0.0f
 #define YAW_KD_P                0.0f
 
-/* 内环（速度环）PID —— 输入：速度误差(rpm)，输出：电流值 */
+// 内环（速度环）PID —— 输入：速度误差(rpm)，输出：电流值
 #define YAW_KP_S                180.0f
 #define YAW_KI_S                0.0f
 #define YAW_KD_S                0.0f
 
-/* ============ Pitch 轴参数 ============ */
 #define PITCH_MOTOR_MAX_OUT     30000.0f
 #define PITCH_MOTOR_MAX_IOUT    2000.0f
 
@@ -195,7 +193,7 @@
 #define PITCH_KD_S              0.0f
 
 //云台限位
-/* 根据你机器人的机械结构设置，防止云台撞到车身 */
+/* 根据机器人的机械结构设置，防止云台撞到车身 */
 #define PITCH_ANGLE_MAX         20.0f
 #define PITCH_ANGLE_MIN        -15.0f
 #define YAW_CAN_ID            0x01

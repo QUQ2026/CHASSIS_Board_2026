@@ -1,5 +1,4 @@
 #include  "Gimbal_Task.h"
-//云台pitch轴缺一个重力补偿,先限位来解决
 
 
 static float Gimbal_NormalizeAngle(float angle)//角度归一化
@@ -64,7 +63,7 @@ void Gimbal_set_target_VT13(CONTAL_Typedef *CONTAL,VT13_Typedef *VT13,IMU_Data_t
 //DBUS版
 void Gimbal_Set_Target_DBUS(CONTAL_Typedef *CONTAL,DBUS_Typedef *DBUS, IMU_Data_t *IMU)
 {
-    //Yaw：直接累加，不归一化，保持和 YawTotalAngle 同一坐标系 ,以下累加的符号可能反了
+    //Yaw：直接累加，不归一化，保持和 YawTotalAngle 同一坐标系
     CONTAL->HEAD.Yaw += (float)DBUS->Remote.CH3 * (YAW_RC_SPEED / 660.0f);
     CONTAL->HEAD.Pitch += (float)DBUS->Remote.CH2 * (PITCH_RC_SPEED / 660.0f);
     CONTAL->HEAD.Pitch  = Gimbal_Clamp(CONTAL->HEAD.Pitch,CONTAL->HEAD.Pitch_MAX,CONTAL->HEAD.Pitch_MIN);
@@ -100,6 +99,7 @@ uint8_t gimbal_task(CONTAL_Typedef *CONTAL,RUI_ROOT_STATUS_Typedef *Root,MOTOR_T
     //CONTAL->CG.YAW_SPEED = MOTOR->m_dm4310_y_t.DATA.vel;  // rad/s
     CONTAL->CG.RELATIVE_ANGLE =-(int16_t)(CONTAL->CG.YAW_INIT_ANGLE - MOTOR->m_dm4310_y_t.DATA.Angle_now);
     CONTAL->CG.YAW_SPEED = MOTOR->m_dm4310_y_t.DATA.Speed_now;
+
     PID_Calculate(&MOTOR->m_dm4310_y_t.PID_P,IMU->YawTotalAngle,CONTAL->HEAD.Yaw);
 
     PID_Calculate(&MOTOR->m_dm4310_y_t.PID_S,QEKF_INS.Gyro[2] * 50.0f,MOTOR->m_dm4310_y_t.PID_P.Output);
