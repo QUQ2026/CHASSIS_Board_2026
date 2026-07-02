@@ -65,7 +65,7 @@ static void MecanumResolve(CONTAL_Typedef *CONTAL)//麦轮底盘
 {
     float vx = CONTAL->BOTTOM.VX;
     float vy = CONTAL->BOTTOM.VY;
-    float vw = CONTAL->BOTTOM.VW * 0.25f;   //等效旋转半径，需实车标定，这里用寒假调底盘的值
+    float vw = CONTAL->BOTTOM.VW * 0.25f;   //旋转半径系数，需实车标定，这里暂用寒假调底盘的值
 
     CONTAL->BOTTOM.wheel1 = ( vx -vy -vw) * OMNI_RATIO;  // Chassis_3
     CONTAL->BOTTOM.wheel2 = (vx + vy + vw) * OMNI_RATIO;  // Chassis_4
@@ -160,10 +160,10 @@ uint8_t chassis_task(CONTAL_Typedef *CONTAL,RUI_ROOT_STATUS_Typedef *Root,User_D
         CONTAL->BOTTOM.wheel4 =0;
     }
 
-    MOTOR->DJI_3508_Chassis_3.DATA.Aim = CONTAL->BOTTOM.wheel1*4.0f;
-    MOTOR->DJI_3508_Chassis_4.DATA.Aim = CONTAL->BOTTOM.wheel2*4.0f;
-    MOTOR->DJI_3508_Chassis_1.DATA.Aim = CONTAL->BOTTOM.wheel3*4.0f;
-    MOTOR->DJI_3508_Chassis_2.DATA.Aim = CONTAL->BOTTOM.wheel4*4.0f;
+    MOTOR->DJI_3508_Chassis_3.DATA.Aim = CONTAL->BOTTOM.wheel1;
+    MOTOR->DJI_3508_Chassis_4.DATA.Aim = CONTAL->BOTTOM.wheel2;
+    MOTOR->DJI_3508_Chassis_1.DATA.Aim = CONTAL->BOTTOM.wheel3;
+    MOTOR->DJI_3508_Chassis_2.DATA.Aim = CONTAL->BOTTOM.wheel4;
 
     PID_Calculate(&MOTOR->DJI_3508_Chassis_1.PID_S,(float)MOTOR->DJI_3508_Chassis_1.DATA.Speed_now,MOTOR->DJI_3508_Chassis_1.DATA.Aim);
     PID_Calculate(&MOTOR->DJI_3508_Chassis_2.PID_S,(float)MOTOR->DJI_3508_Chassis_2.DATA.Speed_now,MOTOR->DJI_3508_Chassis_2.DATA.Aim);
