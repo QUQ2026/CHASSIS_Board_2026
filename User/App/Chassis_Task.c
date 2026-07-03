@@ -55,43 +55,26 @@ uint8_t Motor_PID_Chassis_Init(MOTOR_Typdef *MOTOR)
     float PID_S_2[3] = {   5.0f,   0.1f,   0.0f   };
     float PID_S_3[3] = {   5.0f,   0.1f,   0.0f   };
     float PID_S_4[3] = {   5.0f,   0.1f,   0.0f   };
-    PID_Init(&MOTOR->DJI_3508_Chassis_1.PID_S, 16384.0f, 1000.0f,
-            PID_S_1, 0, 0,
-            0, 0, 0,
-            Integral_Limit|ErrorHandle//积分限幅,输出滤波,堵转监测
-            //梯形积分,变速积分
-            );//微分先行,微分滤波器
-    PID_Init(&MOTOR->DJI_3508_Chassis_2.PID_S, 16384.0f, 1000.0f,
-            PID_S_2, 0, 0,
-            0, 0, 0,
-            Integral_Limit|ErrorHandle//积分限幅,输出滤波,堵转监测
-            //梯形积分,变速积分
-            );//微分先行,微分滤波器
-    PID_Init(&MOTOR->DJI_3508_Chassis_3.PID_S, 16384.0f, 1000.0f,
-             PID_S_3, 0, 0,
-             0, 0, 0,
-             Integral_Limit|ErrorHandle//积分限幅,输出滤波,堵转监测
-             //梯形积分,变速积分
-             );//微分先行,微分滤波器
-    PID_Init(&MOTOR->DJI_3508_Chassis_4.PID_S, 16384.0f, 1000.0f,
-             PID_S_4, 0, 0,
-             0, 0, 0,
-             Integral_Limit|ErrorHandle//积分限幅,输出滤波,堵转监测
-             //梯形积分,变速积分
-             );//微分先行,微分滤波器
+
+    PID_Init(&MOTOR->DJI_3508_Chassis_1.PID_S, 16384.0f, 1000.0f,PID_S_1, 0, 0,0, 0, 0,Integral_Limit|ErrorHandle);//微分先行,微分滤波器
+    PID_Init(&MOTOR->DJI_3508_Chassis_2.PID_S, 16384.0f, 1000.0f,PID_S_2, 0, 0,0, 0, 0,Integral_Limit|ErrorHandle);//微分先行,微分滤波器
+    PID_Init(&MOTOR->DJI_3508_Chassis_3.PID_S, 16384.0f, 1000.0f,PID_S_3, 0, 0,0, 0, 0,Integral_Limit|ErrorHandle);//微分先行,微分滤波器
+    PID_Init(&MOTOR->DJI_3508_Chassis_4.PID_S, 16384.0f, 1000.0f,PID_S_4, 0, 0,0, 0, 0,Integral_Limit|ErrorHandle);//微分先行,微分滤波器
+
     return RUI_DF_READY;
 
 }
 
-uint8_t Chassis_AIM_INIT(RUI_ROOT_STATUS_Typedef *Root, MOTOR_Typdef *MOTOR)//这个函数我都没用
+uint8_t Chassis_AIM_INIT(RUI_ROOT_STATUS_Typedef *Root, MOTOR_Typdef *MOTOR)
 {
     //检查离线
     if (Root->MOTOR_Chassis_1     == RUI_DF_OFFLINE ||
         Root->MOTOR_Chassis_2     == RUI_DF_OFFLINE ||
         Root->MOTOR_Chassis_3     == RUI_DF_OFFLINE ||
         Root->MOTOR_Chassis_4     == RUI_DF_OFFLINE)
+    {
         return RUI_DF_ERROR;
-
+    }
     //电机清空
     HEAD_MOTOR_CLEAR(&MOTOR->DJI_3508_Chassis_1, 1);
     HEAD_MOTOR_CLEAR(&MOTOR->DJI_3508_Chassis_2, 1);
