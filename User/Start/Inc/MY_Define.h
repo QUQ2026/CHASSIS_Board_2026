@@ -198,7 +198,7 @@
 #define PITCH_ANGLE_MIN        -15.0f
 #define YAW_CAN_ID            0x01
 #define PITCH_CAN_ID     0x02// 4310 CAN_ID（调试助手里设的）
-#define YAW_KD_DAMP           0.3f      // ★ 阻尼，需实车调整（范围 0.1~1.0）
+#define YAW_KD_DAMP           0.3f      //阻尼，需实车调整（范围 0.1~1.0）
 #define YAW_V_MAX_OUTPUT      5.0f
 
 /* 摇杆每次调用叠加的角速度（度/周期），越大云台转越快 */
