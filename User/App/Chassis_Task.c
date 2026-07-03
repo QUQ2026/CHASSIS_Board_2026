@@ -48,6 +48,170 @@ static void ApplyGimbal_Transform(CONTAL_Typedef *CONTAL,VT13_Typedef VT13,float
     CONTAL->BOTTOM.VY =  vx_rc * sinf(angle_rad) + vy_rc * cosf(angle_rad);
 }*/
 
+
+//底盘mode
+/*void Chassis_Normal(CONTAL_Typedef *CONTAL, DBUS_Typedef *DBUS, MOTOR_Typdef *MOTOR)//普通模式
+{
+    //旋转速度：拨轮映射
+    CONTAL->BOTTOM.VW = DBUS->Remote.CH3 * (VW_MAX / REMOTE_SCALE);
+    //读取 Yaw 电机编码器，计算云台相对底盘偏角（度）
+    float raw_angle = fmodf(MOTOR->DJI_6020_Yaw.DATA.Angle_now * 360.0f / 8192.0f, 360.0f);
+    float gimbal_deg = NormalizeAngle(raw_angle);
+    ApplyGimbalTransform(CONTAL, DBUS, gimbal_deg);
+    //OmniResolve(CONTAL);
+    MecanumResolve(CONTAL);
+}*/
+
+
+void Chassis_Gyroscope_VT13(CONTAL_Typedef *CONTAL, VT13_Typedef *VT13, IMU_Data_t *IMU)//小陀螺
+{
+    CONTAL->BOTTOM.VW = (float)VT13->Remote.wheel*(VW_MAX/1024.0f);
+    // 使用陀螺仪 yaw（不修改原始值，局部变量归一化）
+    float gimbal_deg =NormalizeAngle(CONTAL->CG.YawTotalAngle_from_gimbal;
+    ApplyGimbal_Transform(CONTAL, *VT13, gimbal_deg);
+    MecanumResolve(CONTAL);
+}
+
+
+void Chassis_Gyroscope_DBUS(CONTAL_Typedef *CONTAL, DBUS_Typedef *DBUS, IMU_Data_t *IMU)
+{
+    CONTAL->BOTTOM.VW =(float)DBUS->Remote.Dial *(VW_MAX/660.0f);// 使用陀螺仪 yaw（不修改原始值，局部变量归一化）
+    float gimbal_deg =NormalizeAngle(CONTAL->CG.YawTotalAngle_from_gimbal);
+    Apply_GimbalTransform(CONTAL, DBUS, gimbal_deg);
+    MecanumResolve(CONTAL);
+}
+
+/*
+void Chassis_Follow_Gimbal(CONTAL_Typedef *CONTAL, VT13_Typedef *VT13, IMU_Data_t *IMU)
+{
+    // CONTAL->CG.RELATIVE_ANGLE 在 gimbal_task 中已计算得出
+    // = -(YAW_INIT_ANGLE - Angle_now) =) = 基于编码器的云台相对角度（单位：编码器计数）
+    float angle_err = (float)CONTAL->CG.RELATIVE_ANGLE * 360.0f / 8192.0f;
+    angle_err = NormalizeAngle(angle_err);
+    float vw = FOLLOW_KP * angle_err + FOLLOW_KD * (angle_err - s_last_angle_err);
+    s_last_angle_err = angle_err;
+    CONTAL->BOTTOM.VW = Clamp(vw, VW_MAX);
+    // 坐标转换：IMU->yaw = 云台绝对角度
+    float gimbal_deg = NormalizeAngle(IMU->yaw);
+    ApplyGimbal_Transform(CONTAL, *VT13, gimbal_deg);
+   // OmniResolve(CONTAL);
+    MecanumResolve(CONTAL);
+}*/
+void Chassis_follow_Gimbal(CONTAL_Typedef *CONTAL, DBUS_Typedef *DBUS, IMU_Data_t *IMU)//底盘跟随
+{
+    float angle_err = (float)CONTAL->CG.RELATIVE_ANGLE * 360.0f / 8192.0f;
+    angle_err = NormalizeAngle(angle_err);
+    float vw = FOLLOW_KP * angle_err + FOLLOW_KD * (angle_err - s_last_angle_err);
+    s_last_angle_err = angle_err;
+    CONTAL->BOTTOM.VW = Clamp(vw, VW_MAX);
+    // 坐标转换，云台绝对角度
+    float gimbal_deg = NormalizeAngle(CONTAL->CG.YawTotalAngle_from_gimbal);
+    Apply_GimbalTransform(CONTAL, DBUS, gimbal_deg);
+    MecanumResolve(CONTAL);
+}
+
+//VT13
+void Chassis_Auto_changeMode_VT13(CONTAL_Typedef *CONTAL, IMU_Data_t *IMU,VT13_Typedef *VT13) {
+    if (VT13->Remote.wheel > 50 || VT13->Remote.wheel < -50)//当拨轮在这个范围动时，不开启小陀螺，可能是误碰
+    {
+        Chassis_Gyroscope_VT13(CONTAL, VT13, IMU);
+    }
+    else{
+        Chassis_Follow_Gimbal(CONTAL, VT13, IMU);
+    }
+
+}
+//DBUS
+void Chassis_Auto_changeMode_DBUS(CONTAL_Typedef *CONTAL, IMU_Data_t *IMU,DBUS_Typedef *DBUS) {
+    if (DBUS->Remote.Dial > 50 || DBUS->Remote.Dial< -50)//当拨轮在这个范围动时，不开启小陀螺，可能是误碰
+    {
+        Chassis_Gyroscope_DBUS(CONTAL, DBUS, IMU);
+    }
+    else{
+        Chassis_follow_Gimbal(CONTAL, DBUS, IMU);
+    }
+}
+
+uint8_t ChassisRXResolve(uint8_t *data,DBUS_Typedef *DBUS,RUI_ROOT_STATUS_Typedef *Root)
+{
+    for (int i = 0; i < 8; i++)
+        CanCommunit_t.gmTOch.getData[i] = data[i];
+
+    DBUS->Remote.CH1  = CanCommunit_t.gmTOch.dataNeaten.vx;  // 前后
+    DBUS->Remote.CH0 = CanCommunit_t.gmTOch.dataNeaten.vy;  // 左右
+    DBUS->Remote.Dial= CanCommunit_t.gmTOch.dataNeaten.vr;  // 拨轮
+
+    DBUS->Remote.S1 = CanCommunit_t.gmTOch.dataNeaten.S1;
+    DBUS->Remote.S2= CanCommunit_t.gmTOch.dataNeaten.S2;
+
+    Root->RM_DBUS = CanCommunit_t.gmTOch.dataNeaten.romoteOnLine;
+    Root->Power   = CanCommunit_t.gmTOch.dataNeaten.supUSe;
+
+    DBUS->KeyBoard.Q     = CanCommunit_t.gmTOch.dataNeaten.key_q;
+    DBUS->KeyBoard.E     = CanCommunit_t.gmTOch.dataNeaten.key_e;
+    DBUS->KeyBoard.C     = CanCommunit_t.gmTOch.dataNeaten.key_c;
+    DBUS->KeyBoard.Shift = CanCommunit_t.gmTOch.dataNeaten.key_shift;
+    DBUS->KeyBoard.Ctrl  = CanCommunit_t.gmTOch.dataNeaten.key_ctrl;
+    DBUS->KeyBoard.F     = CanCommunit_t.gmTOch.dataNeaten.key_f;
+    DBUS->KeyBoard.G     = CanCommunit_t.gmTOch.dataNeaten.key_g;
+
+    return 1;
+}
+
+
+uint8_t ChassisRXResolve_Yaw(uint8_t *data, CONTAL_Typedef *CONTAL)
+{
+    //4字节还原成 float
+    YawFrame.data[0] = data[0];
+    YawFrame.data[1] = data[1];
+    YawFrame.data[2] = data[2];
+    YawFrame.data[3] = data[3];
+
+    CONTAL->CG.YawTotalAngle_from_gimbal= YawFrame.yaw_abs;
+
+    return 1;
+}
+
+
+static void OmniResolve(CONTAL_Typedef *CONTAL)//全向底盘
+{
+    float vx = CONTAL->BOTTOM.VX;
+    float vy = CONTAL->BOTTOM.VY;
+    float vw = CONTAL->BOTTOM.VW * 0.25f;   //等效旋转半径，需实车标定
+
+    CONTAL->BOTTOM.wheel1 = ( vx + vy + vw) * OMNI_RATIO;  // Chassis_3
+    CONTAL->BOTTOM.wheel2 = (-vx + vy + vw) * OMNI_RATIO;  // Chassis_4
+    CONTAL->BOTTOM.wheel3 = (-vx - vy + vw) * OMNI_RATIO;  // Chassis_1
+    CONTAL->BOTTOM.wheel4 = ( vx - vy + vw) * OMNI_RATIO;  // Chassis_2
+}
+
+static void MecanumResolve(CONTAL_Typedef *CONTAL)//麦轮底盘
+{
+    float vx = CONTAL->BOTTOM.VX;
+    float vy = CONTAL->BOTTOM.VY;
+    float vw = CONTAL->BOTTOM.VW * 0.25f;   //旋转半径系数，需实车标定，这里暂用寒假调底盘的值
+
+    CONTAL->BOTTOM.wheel1 = ( vx -vy -vw) * OMNI_RATIO;  // Chassis_3
+    CONTAL->BOTTOM.wheel2 = (vx + vy + vw) * OMNI_RATIO;  // Chassis_4
+    CONTAL->BOTTOM.wheel3 = (vx - vy -vw) * OMNI_RATIO;  // Chassis_1
+    CONTAL->BOTTOM.wheel4 = ( -vx + vy + vw) * OMNI_RATIO;  // Chassis_2
+}
+
+
+
+static void SteeringResolve(CONTAL_Typedef *CONTAL)//舵轮底盘
+{
+    float vx = CONTAL->BOTTOM.VX;
+    float vy = CONTAL->BOTTOM.VY;
+    float vw = CONTAL->BOTTOM.VW * 0.25f;   //旋转半径系数，需实车标定
+
+    CONTAL->BOTTOM.wheel1 =sqrt(pow(vx-sqrt(2)/2*vw,2)+pow(vy-sqrt(2)/2*vw ,2))* OMNI_RATIO;  // Chassis_3
+    CONTAL->BOTTOM.wheel2 = sqrt(pow(vx+sqrt(2)/2*vw,2)+pow(vy-sqrt(2)/2*vw ,2))* OMNI_RATIO;  // Chassis_4
+    CONTAL->BOTTOM.wheel3 = sqrt(pow(vx-sqrt(2)/2*vw,2)+pow(vy+sqrt(2)/2*vw ,2)) * OMNI_RATIO;  // Chassis_1
+    CONTAL->BOTTOM.wheel4 = sqrt(pow(vx+sqrt(2)/2*vw,2)+pow(vy+sqrt(2)/2*vw ,2))* OMNI_RATIO;  // Chassis_2
+}
+
+
 uint8_t Motor_PID_Chassis_Init(MOTOR_Typdef *MOTOR)
 {
 
@@ -128,165 +292,4 @@ uint8_t chassis_task(CONTAL_Typedef *CONTAL,RUI_ROOT_STATUS_Typedef *Root,User_D
     //CAN发送
     DJI_Current_Ctrl(&hcan1,0x200,(int16_t)Out_put[0],(int16_t)Out_put[1],(int16_t)Out_put[2],(int16_t)Out_put[3]);
     return RUI_DF_READY;
-}
-
-//底盘mode
-/*void Chassis_Normal(CONTAL_Typedef *CONTAL, DBUS_Typedef *DBUS, MOTOR_Typdef *MOTOR)//普通模式
-{
-    //旋转速度：拨轮映射
-    CONTAL->BOTTOM.VW = DBUS->Remote.CH3 * (VW_MAX / REMOTE_SCALE);
-    //读取 Yaw 电机编码器，计算云台相对底盘偏角（度）
-    float raw_angle = fmodf(MOTOR->DJI_6020_Yaw.DATA.Angle_now * 360.0f / 8192.0f, 360.0f);
-    float gimbal_deg = NormalizeAngle(raw_angle);
-    ApplyGimbalTransform(CONTAL, DBUS, gimbal_deg);
-    //OmniResolve(CONTAL);
-    MecanumResolve(CONTAL);
-}*/
-
-
-void Chassis_Gyroscope_VT13(CONTAL_Typedef *CONTAL, VT13_Typedef *VT13, IMU_Data_t *IMU)//小陀螺
-{
-    CONTAL->BOTTOM.VW = (float)VT13->Remote.wheel*(VW_MAX/1024.0f);
-    // 使用陀螺仪 yaw（不修改原始值，局部变量归一化）
-    float gimbal_deg =NormalizeAngle(IMU->yaw);
-    ApplyGimbal_Transform(CONTAL, *VT13, gimbal_deg);
-    MecanumResolve(CONTAL);
-}
-
-
-void Chassis_Gyroscope_DBUS(CONTAL_Typedef *CONTAL, DBUS_Typedef *DBUS, IMU_Data_t *IMU) {
-    CONTAL->BOTTOM.VW =(float)DBUS->Remote.Dial *(VW_MAX/660.0f);// 使用陀螺仪 yaw（不修改原始值，局部变量归一化）
-    float gimbal_deg =NormalizeAngle(IMU->yaw);
-    Apply_GimbalTransform(CONTAL, DBUS, gimbal_deg);
-    MecanumResolve(CONTAL);
-}
-
-/*
-void Chassis_Follow_Gimbal(CONTAL_Typedef *CONTAL, VT13_Typedef *VT13, IMU_Data_t *IMU)
-{
-    // CONTAL->CG.RELATIVE_ANGLE 在 gimbal_task 中已计算得出
-    // = -(YAW_INIT_ANGLE - Angle_now) =) = 基于编码器的云台相对角度（单位：编码器计数）
-    float angle_err = (float)CONTAL->CG.RELATIVE_ANGLE * 360.0f / 8192.0f;
-    angle_err = NormalizeAngle(angle_err);
-    float vw = FOLLOW_KP * angle_err + FOLLOW_KD * (angle_err - s_last_angle_err);
-    s_last_angle_err = angle_err;
-    CONTAL->BOTTOM.VW = Clamp(vw, VW_MAX);
-    // 坐标转换：IMU->yaw = 云台绝对角度
-    float gimbal_deg = NormalizeAngle(IMU->yaw);
-    ApplyGimbal_Transform(CONTAL, *VT13, gimbal_deg);
-   // OmniResolve(CONTAL);
-    MecanumResolve(CONTAL);
-}*/
-void Chassis_follow_Gimbal(CONTAL_Typedef *CONTAL, DBUS_Typedef *DBUS, IMU_Data_t *IMU)//底盘跟随
-{
-    float angle_err = (float)CONTAL->CG.RELATIVE_ANGLE * 360.0f / 8192.0f;
-    angle_err = NormalizeAngle(angle_err);
-    float vw = FOLLOW_KP * angle_err + FOLLOW_KD * (angle_err - s_last_angle_err);
-    s_last_angle_err = angle_err;
-    CONTAL->BOTTOM.VW = Clamp(vw, VW_MAX);
-    // 坐标转换：IMU->yaw = 云台绝对角度
-    float gimbal_deg = NormalizeAngle(IMU->yaw);
-    Apply_GimbalTransform(CONTAL, DBUS, gimbal_deg);
-    MecanumResolve(CONTAL);
-}
-
-//VT13
-void Chassis_Auto_changeMode_VT13(CONTAL_Typedef *CONTAL, IMU_Data_t *IMU,VT13_Typedef *VT13) {
-    if (VT13->Remote.wheel > 50 || VT13->Remote.wheel < -50)//当拨轮在这个范围动时，不开启小陀螺，可能是误碰
-    {
-        Chassis_Gyroscope_VT13(CONTAL, VT13, IMU);
-    }
-    else{
-        Chassis_Follow_Gimbal(CONTAL, VT13, IMU);
-    }
-
-}
-//DBUS
-void Chassis_Auto_changeMode_DBUS(CONTAL_Typedef *CONTAL, IMU_Data_t *IMU,DBUS_Typedef *DBUS) {
-    if (DBUS->Remote.Dial > 50 || DBUS->Remote.Dial< -50)//当拨轮在这个范围动时，不开启小陀螺，可能是误碰
-    {
-        Chassis_Gyroscope_DBUS(CONTAL, DBUS, IMU);
-    }
-    else{
-        Chassis_follow_Gimbal(CONTAL, DBUS, IMU);
-    }
-}
-
-uint8_t ChassisRXResolve(uint8_t *data,DBUS_Typedef *DBUS,RUI_ROOT_STATUS_Typedef *Root)
-{
-    for (int i = 0; i < 8; i++)
-        CanCommunit_t.gmTOch.getData[i] = data[i];
-
-    DBUS->Remote.CH1  = CanCommunit_t.gmTOch.dataNeaten.vx;  // 前后
-    DBUS->Remote.CH0 = CanCommunit_t.gmTOch.dataNeaten.vy;  // 左右
-    DBUS->Remote.Dial= CanCommunit_t.gmTOch.dataNeaten.vr;  // 拨轮
-
-    DBUS->Remote.S1 = CanCommunit_t.gmTOch.dataNeaten.S1;
-    DBUS->Remote.S2= CanCommunit_t.gmTOch.dataNeaten.S2;
-
-    Root->RM_DBUS = CanCommunit_t.gmTOch.dataNeaten.romoteOnLine;
-    Root->Power   = CanCommunit_t.gmTOch.dataNeaten.supUSe;
-
-    DBUS->KeyBoard.Q     = CanCommunit_t.gmTOch.dataNeaten.key_q;
-    DBUS->KeyBoard.E     = CanCommunit_t.gmTOch.dataNeaten.key_e;
-    DBUS->KeyBoard.C     = CanCommunit_t.gmTOch.dataNeaten.key_c;
-    DBUS->KeyBoard.Shift = CanCommunit_t.gmTOch.dataNeaten.key_shift;
-    DBUS->KeyBoard.Ctrl  = CanCommunit_t.gmTOch.dataNeaten.key_ctrl;
-    DBUS->KeyBoard.F     = CanCommunit_t.gmTOch.dataNeaten.key_f;
-    DBUS->KeyBoard.G     = CanCommunit_t.gmTOch.dataNeaten.key_g;
-
-    return 1;
-}
-
-
-uint8_t ChassisRXResolve_Yaw(uint8_t *data, CONTAL_Typedef *CONTAL)
-{
-    //4字节还原成 float
-    YawFrame.data[0] = data[0];
-    YawFrame.data[1] = data[1];
-    YawFrame.data[2] = data[2];
-    YawFrame.data[3] = data[3];
-
-    CONTAL->CG.RELATIVE_ANGLE= YawFrame.yaw_abs;
-
-    return 1;
-}
-
-
-static void OmniResolve(CONTAL_Typedef *CONTAL)//全向底盘
-{
-    float vx = CONTAL->BOTTOM.VX;
-    float vy = CONTAL->BOTTOM.VY;
-    float vw = CONTAL->BOTTOM.VW * 0.25f;   //等效旋转半径，需实车标定
-
-    CONTAL->BOTTOM.wheel1 = ( vx + vy + vw) * OMNI_RATIO;  // Chassis_3
-    CONTAL->BOTTOM.wheel2 = (-vx + vy + vw) * OMNI_RATIO;  // Chassis_4
-    CONTAL->BOTTOM.wheel3 = (-vx - vy + vw) * OMNI_RATIO;  // Chassis_1
-    CONTAL->BOTTOM.wheel4 = ( vx - vy + vw) * OMNI_RATIO;  // Chassis_2
-}
-
-static void MecanumResolve(CONTAL_Typedef *CONTAL)//麦轮底盘
-{
-    float vx = CONTAL->BOTTOM.VX;
-    float vy = CONTAL->BOTTOM.VY;
-    float vw = CONTAL->BOTTOM.VW * 0.25f;   //旋转半径系数，需实车标定，这里暂用寒假调底盘的值
-
-    CONTAL->BOTTOM.wheel1 = ( vx -vy -vw) * OMNI_RATIO;  // Chassis_3
-    CONTAL->BOTTOM.wheel2 = (vx + vy + vw) * OMNI_RATIO;  // Chassis_4
-    CONTAL->BOTTOM.wheel3 = (vx - vy -vw) * OMNI_RATIO;  // Chassis_1
-    CONTAL->BOTTOM.wheel4 = ( -vx + vy + vw) * OMNI_RATIO;  // Chassis_2
-}
-
-
-
-static void SteeringResolve(CONTAL_Typedef *CONTAL)//舵轮底盘
-{
-    float vx = CONTAL->BOTTOM.VX;
-    float vy = CONTAL->BOTTOM.VY;
-    float vw = CONTAL->BOTTOM.VW * 0.25f;   //旋转半径系数，需实车标定
-
-    CONTAL->BOTTOM.wheel1 =sqrt(pow(vx-sqrt(2)/2*vw,2)+pow(vy-sqrt(2)/2*vw ,2))* OMNI_RATIO;  // Chassis_3
-    CONTAL->BOTTOM.wheel2 = sqrt(pow(vx+sqrt(2)/2*vw,2)+pow(vy-sqrt(2)/2*vw ,2))* OMNI_RATIO;  // Chassis_4
-    CONTAL->BOTTOM.wheel3 = sqrt(pow(vx-sqrt(2)/2*vw,2)+pow(vy+sqrt(2)/2*vw ,2)) * OMNI_RATIO;  // Chassis_1
-    CONTAL->BOTTOM.wheel4 = sqrt(pow(vx+sqrt(2)/2*vw,2)+pow(vy+sqrt(2)/2*vw ,2))* OMNI_RATIO;  // Chassis_2
 }

@@ -135,6 +135,9 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef* hcan)
 			case GIMBAL_kong_YAW:
 				ChassisRXResolve_Yaw(rx_data, &RUI_V_CONTAL);
 				break;
+			case 0x301:
+				dm4310_RXdata(&ALL_MOTOR.m_dm4310_y_t,rx_data);
+				break;
 			default:
 				break;
         }
