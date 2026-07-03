@@ -1,4 +1,3 @@
-
 #include "Chassis_Task.h"
 
 #define OMNI_RATIO  ((30.0f / 3.14159265f) / 0.075f * 19.0f)//线速度（m/s）转换成电机转速（RPM）的比例系数
@@ -49,45 +48,6 @@ static void ApplyGimbal_Transform(CONTAL_Typedef *CONTAL,VT13_Typedef VT13,float
     CONTAL->BOTTOM.VY =  vx_rc * sinf(angle_rad) + vy_rc * cosf(angle_rad);
 }*/
 
-static void OmniResolve(CONTAL_Typedef *CONTAL)//全向底盘
-{
-    float vx = CONTAL->BOTTOM.VX;
-    float vy = CONTAL->BOTTOM.VY;
-    float vw = CONTAL->BOTTOM.VW * 0.25f;   //等效旋转半径，需实车标定
-
-    CONTAL->BOTTOM.wheel1 = ( vx + vy + vw) * OMNI_RATIO;  // Chassis_3
-    CONTAL->BOTTOM.wheel2 = (-vx + vy + vw) * OMNI_RATIO;  // Chassis_4
-    CONTAL->BOTTOM.wheel3 = (-vx - vy + vw) * OMNI_RATIO;  // Chassis_1
-    CONTAL->BOTTOM.wheel4 = ( vx - vy + vw) * OMNI_RATIO;  // Chassis_2
-}
-
-static void MecanumResolve(CONTAL_Typedef *CONTAL)//麦轮底盘
-{
-    float vx = CONTAL->BOTTOM.VX;
-    float vy = CONTAL->BOTTOM.VY;
-    float vw = CONTAL->BOTTOM.VW * 0.25f;   //旋转半径系数，需实车标定，这里暂用寒假调底盘的值
-
-    CONTAL->BOTTOM.wheel1 = ( vx -vy -vw) * OMNI_RATIO;  // Chassis_3
-    CONTAL->BOTTOM.wheel2 = (vx + vy + vw) * OMNI_RATIO;  // Chassis_4
-    CONTAL->BOTTOM.wheel3 = (vx - vy -vw) * OMNI_RATIO;  // Chassis_1
-    CONTAL->BOTTOM.wheel4 = ( -vx + vy + vw) * OMNI_RATIO;  // Chassis_2
-}
-
-
-
-static void SteeringResolve(CONTAL_Typedef *CONTAL)//舵轮底盘
-{
-    float vx = CONTAL->BOTTOM.VX;
-    float vy = CONTAL->BOTTOM.VY;
-    float vw = CONTAL->BOTTOM.VW * 0.25f;   //旋转半径系数，需实车标定
-
-    CONTAL->BOTTOM.wheel1 =sqrt(pow(vx-sqrt(2)/2*vw,2)+pow(vy-sqrt(2)/2*vw ,2))* OMNI_RATIO;  // Chassis_3
-    CONTAL->BOTTOM.wheel2 = sqrt(pow(vx+sqrt(2)/2*vw,2)+pow(vy-sqrt(2)/2*vw ,2))* OMNI_RATIO;  // Chassis_4
-    CONTAL->BOTTOM.wheel3 = sqrt(pow(vx-sqrt(2)/2*vw,2)+pow(vy+sqrt(2)/2*vw ,2)) * OMNI_RATIO;  // Chassis_1
-    CONTAL->BOTTOM.wheel4 = sqrt(pow(vx+sqrt(2)/2*vw,2)+pow(vy+sqrt(2)/2*vw ,2))* OMNI_RATIO;  // Chassis_2
-}
-
-
 uint8_t Motor_PID_Chassis_Init(MOTOR_Typdef *MOTOR)
 {
 
@@ -122,6 +82,7 @@ uint8_t Motor_PID_Chassis_Init(MOTOR_Typdef *MOTOR)
     return RUI_DF_READY;
 
 }
+
 uint8_t Chassis_AIM_INIT(RUI_ROOT_STATUS_Typedef *Root, MOTOR_Typdef *MOTOR)//这个函数我都没用
 {
     //检查离线
@@ -246,8 +207,6 @@ void Chassis_follow_Gimbal(CONTAL_Typedef *CONTAL, DBUS_Typedef *DBUS, IMU_Data_
     MecanumResolve(CONTAL);
 }
 
-
-
 //VT13
 void Chassis_Auto_changeMode_VT13(CONTAL_Typedef *CONTAL, IMU_Data_t *IMU,VT13_Typedef *VT13) {
     if (VT13->Remote.wheel > 50 || VT13->Remote.wheel < -50)//当拨轮在这个范围动时，不开启小陀螺，可能是误碰
@@ -308,4 +267,43 @@ uint8_t ChassisRXResolve_Yaw(uint8_t *data, CONTAL_Typedef *CONTAL)
     CONTAL->CG.RELATIVE_ANGLE= YawFrame.yaw_abs;
 
     return 1;
+}
+
+
+static void OmniResolve(CONTAL_Typedef *CONTAL)//全向底盘
+{
+    float vx = CONTAL->BOTTOM.VX;
+    float vy = CONTAL->BOTTOM.VY;
+    float vw = CONTAL->BOTTOM.VW * 0.25f;   //等效旋转半径，需实车标定
+
+    CONTAL->BOTTOM.wheel1 = ( vx + vy + vw) * OMNI_RATIO;  // Chassis_3
+    CONTAL->BOTTOM.wheel2 = (-vx + vy + vw) * OMNI_RATIO;  // Chassis_4
+    CONTAL->BOTTOM.wheel3 = (-vx - vy + vw) * OMNI_RATIO;  // Chassis_1
+    CONTAL->BOTTOM.wheel4 = ( vx - vy + vw) * OMNI_RATIO;  // Chassis_2
+}
+
+static void MecanumResolve(CONTAL_Typedef *CONTAL)//麦轮底盘
+{
+    float vx = CONTAL->BOTTOM.VX;
+    float vy = CONTAL->BOTTOM.VY;
+    float vw = CONTAL->BOTTOM.VW * 0.25f;   //旋转半径系数，需实车标定，这里暂用寒假调底盘的值
+
+    CONTAL->BOTTOM.wheel1 = ( vx -vy -vw) * OMNI_RATIO;  // Chassis_3
+    CONTAL->BOTTOM.wheel2 = (vx + vy + vw) * OMNI_RATIO;  // Chassis_4
+    CONTAL->BOTTOM.wheel3 = (vx - vy -vw) * OMNI_RATIO;  // Chassis_1
+    CONTAL->BOTTOM.wheel4 = ( -vx + vy + vw) * OMNI_RATIO;  // Chassis_2
+}
+
+
+
+static void SteeringResolve(CONTAL_Typedef *CONTAL)//舵轮底盘
+{
+    float vx = CONTAL->BOTTOM.VX;
+    float vy = CONTAL->BOTTOM.VY;
+    float vw = CONTAL->BOTTOM.VW * 0.25f;   //旋转半径系数，需实车标定
+
+    CONTAL->BOTTOM.wheel1 =sqrt(pow(vx-sqrt(2)/2*vw,2)+pow(vy-sqrt(2)/2*vw ,2))* OMNI_RATIO;  // Chassis_3
+    CONTAL->BOTTOM.wheel2 = sqrt(pow(vx+sqrt(2)/2*vw,2)+pow(vy-sqrt(2)/2*vw ,2))* OMNI_RATIO;  // Chassis_4
+    CONTAL->BOTTOM.wheel3 = sqrt(pow(vx-sqrt(2)/2*vw,2)+pow(vy+sqrt(2)/2*vw ,2)) * OMNI_RATIO;  // Chassis_1
+    CONTAL->BOTTOM.wheel4 = sqrt(pow(vx+sqrt(2)/2*vw,2)+pow(vy+sqrt(2)/2*vw ,2))* OMNI_RATIO;  // Chassis_2
 }
