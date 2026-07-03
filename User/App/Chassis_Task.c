@@ -67,7 +67,7 @@ void Chassis_Gyroscope_VT13(CONTAL_Typedef *CONTAL, VT13_Typedef *VT13, IMU_Data
 {
     CONTAL->BOTTOM.VW = (float)VT13->Remote.wheel*(VW_MAX/1024.0f);
     // 使用陀螺仪 yaw（不修改原始值，局部变量归一化）
-    float gimbal_deg =NormalizeAngle(CONTAL->CG.YawTotalAngle_from_gimbal;
+    float gimbal_deg =NormalizeAngle(CONTAL->CG.YawTotalAngle_from_gimbal);
     ApplyGimbal_Transform(CONTAL, *VT13, gimbal_deg);
     MecanumResolve(CONTAL);
 }
@@ -97,8 +97,9 @@ void Chassis_Follow_Gimbal(CONTAL_Typedef *CONTAL, VT13_Typedef *VT13, IMU_Data_
    // OmniResolve(CONTAL);
     MecanumResolve(CONTAL);
 }*/
-void Chassis_follow_Gimbal(CONTAL_Typedef *CONTAL, DBUS_Typedef *DBUS, IMU_Data_t *IMU)//底盘跟随
+void Chassis_follow_Gimbal(CONTAL_Typedef *CONTAL, DBUS_Typedef *DBUS, IMU_Data_t *IMU,MOTOR_Typdef  *MOTOR)//底盘跟随
 {
+    CONTAL->CG.RELATIVE_ANGLE =-(int16_t)(CONTAL->CG.YAW_INIT_ANGLE - MOTOR->m_dm4310_y_t.DATA.Angle_now);
     float angle_err = (float)CONTAL->CG.RELATIVE_ANGLE * 360.0f / 8192.0f;
     angle_err = NormalizeAngle(angle_err);
     float vw = FOLLOW_KP * angle_err + FOLLOW_KD * (angle_err - s_last_angle_err);
@@ -117,7 +118,7 @@ void Chassis_Auto_changeMode_VT13(CONTAL_Typedef *CONTAL, IMU_Data_t *IMU,VT13_T
         Chassis_Gyroscope_VT13(CONTAL, VT13, IMU);
     }
     else{
-        Chassis_Follow_Gimbal(CONTAL, VT13, IMU);
+        Chassis_Follow_Gimbal(CONTAL, VT13, IMU, &ALL_MOTOR);
     }
 
 }
@@ -128,7 +129,7 @@ void Chassis_Auto_changeMode_DBUS(CONTAL_Typedef *CONTAL, IMU_Data_t *IMU,DBUS_T
         Chassis_Gyroscope_DBUS(CONTAL, DBUS, IMU);
     }
     else{
-        Chassis_follow_Gimbal(CONTAL, DBUS, IMU);
+        Chassis_follow_Gimbal(CONTAL, DBUS, IMU,&ALL_MOTOR);
     }
 }
 
