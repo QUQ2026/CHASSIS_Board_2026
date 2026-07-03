@@ -89,9 +89,9 @@ void StartRootTask(void const * argument)
 
     for(;;)
     {
-    	RUI_F_ROOT(&RUI_ROOT_STATUS, &VT13, &ALL_MOTOR, &CAPDATE.GET);//Root_RMDBUS的赋值来源
-    	currentTimeRoot += 5;
-    	osDelayUntil(currentTimeRoot);
+    	// RUI_F_ROOT(&RUI_ROOT_STATUS, &VT13, &ALL_MOTOR, &CAPDATE.GET);//Root_RMDBUS的赋值来源,框架是VT13先不改
+    	// currentTimeRoot += 5;
+    	// osDelayUntil(currentTimeRoot);
     }
 }
 float dt_pc = 0; 

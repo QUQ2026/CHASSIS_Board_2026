@@ -22,8 +22,8 @@ void RobotTask(uint8_t mode,
                RUI_ROOT_STATUS_Typedef *Root,
                MOTOR_Typdef *MOTOR,
                IMU_Data_t *IMU_Data,
-							 TD_t *TDDD,
-							VT13_Typedef* VT13_DBUS)
+               TD_t *TDDD,
+               VT13_Typedef* VT13_DBUS)
 {
     switch (mode) {
 
@@ -49,7 +49,7 @@ void RobotTask(uint8_t mode,
                 //Gimbal_set_target_VT13(CONTAL,VT13_DBUS,IMU_Data);
               Gimbal_Set_target_DBUS(CONTAL,DBUS,IMU_Data);
             }
-           gimbal_task(CONTAL,Root,MOTOR,IMU_Data);
+          // gimbal_task(CONTAL,Root,MOTOR,IMU_Data);
         }break;
 
         case 3://电容
