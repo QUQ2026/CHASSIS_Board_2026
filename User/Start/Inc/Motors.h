@@ -88,6 +88,7 @@ typedef struct
         int16_t RELATIVE_ANGLE;
         int16_t YAW_SPEED;
         float TOP_ANGLE;
+        float YawTotalAngle_from_gimbal;
     } CG;
 
     struct
