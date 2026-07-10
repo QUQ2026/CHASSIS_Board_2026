@@ -49,7 +49,7 @@ float vision_state;
 
 DBUS_UNION_TypeDef RUI_V_DBUS_UNION = { 0 };
 VT13_UNION_Typdef VT13_UNION = {0};
-		
+struct CanCommunit_typedef CanCommunit_t;
 TYPEDEF_VISION VISION_V_DATA = {0};////普通视觉
 // VisionRxDataUnion VISION_V_DATA ;////加预测视觉
 

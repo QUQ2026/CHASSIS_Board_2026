@@ -1,11 +1,12 @@
 #include "Chassis_Task.h"
+YawFrame_t YawFrame;
 
 #define OMNI_RATIO  ((30.0f / 3.14159265f) / 0.075f * 19.0f)//线速度（m/s）转换成电机转速（RPM）的比例系数
 
 static float s_last_angle_err = 0.0f;     // 上次跟随角度误差（用于微分）
 YawFrame_t YawFrame;
 
-static float NormalizeAngle(float angle)//角度归一化
+ float NormalizeAngle(float angle)//角度归一化
 {
     angle = fmodf(angle, 360.0f);
     if (angle >  180.0f) angle -= 360.0f;
@@ -13,7 +14,7 @@ static float NormalizeAngle(float angle)//角度归一化
     return angle;
 }
 
-static float Clamp(float val, float limit)//限幅
+float Clamp(float val, float limit)//限幅
 {
     if (val >  limit) return  limit;
     if (val < -limit) return -limit;
@@ -21,7 +22,7 @@ static float Clamp(float val, float limit)//限幅
 }
 
 //DBUS遥控写法  坐标系转化
-static void Apply_GimbalTransform(CONTAL_Typedef *CONTAL, DBUS_Typedef *DBUS,float gimbal_deg)
+ void Apply_GimbalTransform(CONTAL_Typedef *CONTAL, DBUS_Typedef *DBUS,float gimbal_deg)
 {
     float angle_rad = gimbal_deg * (3.14159265f / 180.0f)+ CONTAL->BOTTOM.VW * CHASSIS_LOOP_TIME;
 
@@ -63,14 +64,14 @@ static void ApplyGimbal_Transform(CONTAL_Typedef *CONTAL,VT13_Typedef VT13,float
 }*/
 
 
-void Chassis_Gyroscope_VT13(CONTAL_Typedef *CONTAL, VT13_Typedef *VT13, IMU_Data_t *IMU)//小陀螺
-{
-    CONTAL->BOTTOM.VW = (float)VT13->Remote.wheel*(VW_MAX/1024.0f);
-    // 使用陀螺仪 yaw（不修改原始值，局部变量归一化）
-    float gimbal_deg =NormalizeAngle(CONTAL->CG.YawTotalAngle_from_gimbal);
-    ApplyGimbal_Transform(CONTAL, *VT13, gimbal_deg);
-    MecanumResolve(CONTAL);
-}
+//void Chassis_Gyroscope_VT13(CONTAL_Typedef *CONTAL, VT13_Typedef *VT13, IMU_Data_t *IMU)//小陀螺
+//{
+//    CONTAL->BOTTOM.VW = (float)VT13->Remote.wheel*(VW_MAX/1024.0f);
+//    // 使用陀螺仪 yaw（不修改原始值，局部变量归一化）
+//    float gimbal_deg =NormalizeAngle(CONTAL->CG.YawTotalAngle_from_gimbal);
+//    ApplyGimbal_Transform(CONTAL, *VT13, gimbal_deg);
+//    MecanumResolve(CONTAL);
+//}
 
 
 void Chassis_Gyroscope_DBUS(CONTAL_Typedef *CONTAL, DBUS_Typedef *DBUS, IMU_Data_t *IMU)
@@ -112,16 +113,16 @@ void Chassis_follow_Gimbal(CONTAL_Typedef *CONTAL, DBUS_Typedef *DBUS, IMU_Data_
 }
 
 //VT13
-void Chassis_Auto_changeMode_VT13(CONTAL_Typedef *CONTAL, IMU_Data_t *IMU,VT13_Typedef *VT13) {
-    if (VT13->Remote.wheel > 50 || VT13->Remote.wheel < -50)//当拨轮在这个范围动时，不开启小陀螺，可能是误碰
-    {
-        Chassis_Gyroscope_VT13(CONTAL, VT13, IMU);
-    }
-    else{
-        Chassis_Follow_Gimbal(CONTAL, VT13, IMU, &ALL_MOTOR);
-    }
+//void Chassis_Auto_changeMode_VT13(CONTAL_Typedef *CONTAL, IMU_Data_t *IMU,VT13_Typedef *VT13) {
+//    if (VT13->Remote.wheel > 50 || VT13->Remote.wheel < -50)//当拨轮在这个范围动时，不开启小陀螺，可能是误碰
+//    {
+//        Chassis_Gyroscope_VT13(CONTAL, VT13, IMU);
+//    }
+//    else{
+//        Chassis_Follow_Gimbal(CONTAL, VT13, IMU, &ALL_MOTOR);
+//    }
 
-}
+//}
 //DBUS
 void Chassis_Auto_changeMode_DBUS(CONTAL_Typedef *CONTAL, IMU_Data_t *IMU,DBUS_Typedef *DBUS) {
     if (DBUS->Remote.Dial > 50 || DBUS->Remote.Dial< -50)//当拨轮在这个范围动时，不开启小陀螺，可能是误碰
@@ -174,7 +175,7 @@ uint8_t ChassisRXResolve_Yaw(uint8_t *data, CONTAL_Typedef *CONTAL)
 }
 
 
-static void OmniResolve(CONTAL_Typedef *CONTAL)//全向底盘
+static  void OmniResolve(CONTAL_Typedef *CONTAL)//全向底盘
 {
     float vx = CONTAL->BOTTOM.VX;
     float vy = CONTAL->BOTTOM.VY;
@@ -186,7 +187,7 @@ static void OmniResolve(CONTAL_Typedef *CONTAL)//全向底盘
     CONTAL->BOTTOM.wheel4 = ( vx - vy + vw) * OMNI_RATIO;  // Chassis_2
 }
 
-static void MecanumResolve(CONTAL_Typedef *CONTAL)//麦轮底盘
+ static void MecanumResolve(CONTAL_Typedef *CONTAL)//麦轮底盘
 {
     float vx = CONTAL->BOTTOM.VX;
     float vy = CONTAL->BOTTOM.VY;

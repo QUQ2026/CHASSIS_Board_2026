@@ -79,12 +79,12 @@ struct CanCommunit_typedef
 };
 
 
-static float NormalizeAngle(float angle);
-static float Clamp(float val, float limit);
+ float NormalizeAngle(float angle);
+ float Clamp(float val, float limit);
 
-static void Apply_GimbalTransform(CONTAL_Typedef *CONTAL, DBUS_Typedef *DBUS,float gimbal_deg);
+ void Apply_GimbalTransform(CONTAL_Typedef *CONTAL, DBUS_Typedef *DBUS,float gimbal_deg);
 
-static void ApplyGimbal_Transform(CONTAL_Typedef *CONTAL,VT13_Typedef VT13,float gimbal_deg);
+ void ApplyGimbal_Transform(CONTAL_Typedef *CONTAL,VT13_Typedef VT13,float gimbal_deg);
 static void OmniResolve(CONTAL_Typedef *CONTAL);
 static void MecanumResolve(CONTAL_Typedef *CONTAL);
 uint8_t Motor_PID_Chassis_Init(MOTOR_Typdef *MOTOR);
